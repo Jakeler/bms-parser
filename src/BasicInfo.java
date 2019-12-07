@@ -5,6 +5,7 @@ import io.kaitai.struct.KaitaiStruct;
 import io.kaitai.struct.KaitaiStream;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class BasicInfo extends KaitaiStruct {
@@ -59,4 +60,12 @@ public class BasicInfo extends KaitaiStruct {
     public int dataLen() { return dataLen; }
     public BasicInfo _root() { return _root; }
     public KaitaiStruct _parent() { return _parent; }
+
+	@Override
+	public String toString() {
+		return "BasicInfo [magicStart=" + Arrays.toString(magicStart) + ", magicCmd=" + Arrays.toString(magicCmd)
+				+ ", magicStatus=" + Arrays.toString(magicStatus) + ", dataLen=" + dataLen + "]";
+	}
+
+
 }
