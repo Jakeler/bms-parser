@@ -2,17 +2,18 @@ meta:
   id: basic_info
   endian: be
 seq:
-  - id: uuid
-    size: 16
-  - id: name
-    type: str
-    size: 24
-    encoding: UTF-8
-  - id: birth_year
-    type: u2
-  - id: weight
-    type: f8
-  - id: rating
-    type: s4
+  - id: magic_start
+    contents: [0xdd]
+  - id: magic_cmd
+    contents: [0x03]
+  - id: magic_status
+    contents: [0x00]
+  - id: data_len
+    type: u1
+
+enums:
+    status:
+      0x00: ok
+      0x80: fail
 
  
