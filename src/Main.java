@@ -9,11 +9,22 @@ public class Main {
 				0x02, 0x82, 0x00, 0x00, 0x00, 0x00, 0x21, 0x0e,
 				0x03, 0x0b, 0x02, 0x0b, 0x22, 0x0b, 0x10, 0xfc,
 				0x42, 0x77});
-		BasicInfo info = new BasicInfo(new ByteBufferKaitaiStream(input));
+
+		byte[] input2 = int2byte(new int[]{
+			0xdd, 0x04, 0x00, 0x16, 0x0f, 0xa7, 0x0f, 0xa5,
+			0x0f, 0xa1, 0x0f, 0x98, 0x0f, 0x9e, 0x0f, 0xa0,
+			0x0f, 0xb1, 0x0f, 0xbb, 0x0f, 0xb1, 0x0f, 0xa6,
+			0x0f, 0xa7, 0xf8, 0x18, 0x77});
+
+		var info = new BasicInfo(new ByteBufferKaitaiStream(input));
 		System.out.println(info.totalV());
 		System.out.println(info.balanceStatus().flag());
 		System.out.println("Charge"+ info.fetStatus().charge() + " Discharge" + info.fetStatus().charge());
 		System.out.println(info.toString());
+
+		var cells = new CellVoltages(new ByteBufferKaitaiStream(input2));
+		System.out.println("Count " + cells.count());
+		System.out.println("Cells " + cells.cells());
 	}
 	
 	static byte[] int2byte(int[] in) {
