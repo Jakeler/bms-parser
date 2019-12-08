@@ -4,7 +4,6 @@ import io.kaitai.struct.ByteBufferKaitaiStream;
 import io.kaitai.struct.KaitaiStruct;
 import io.kaitai.struct.KaitaiStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -63,25 +62,9 @@ public class BasicInfo extends KaitaiStruct {
         this.magicCmd = this._io.ensureFixedContents(new byte[] { 3 });
         this.magicStatus = this._io.ensureFixedContents(new byte[] { 0 });
         this.dataLen = this._io.readU1();
-        this.total = this._io.readU2be();
-        this.current = this._io.readU2be();
-        this.remainCap = this._io.readU2be();
-        this.typCap = this._io.readU2be();
-        this.cycles = this._io.readU2be();
-        this.prodDate = this._io.readU2be();
-        this.balanceStatus = new BalanceList(this._io, this, _root);
-        this.protStatus = new ProtList(this._io, this, _root);
-        this.softwareVersion = this._io.readU1();
-        this.remainCapPercent = this._io.readU1();
-        this._raw_fetStatus = this._io.readBytes(1);
-        KaitaiStream _io__raw_fetStatus = new ByteBufferKaitaiStream(_raw_fetStatus);
-        this.fetStatus = new FetBits(_io__raw_fetStatus, this, _root);
-        this.cellCount = this._io.readU1();
-        this.tempCount = this._io.readU1();
-        tempValue = new ArrayList<Integer>((int) (tempCount()));
-        for (int i = 0; i < tempCount(); i++) {
-            this.tempValue.add(this._io.readU2be());
-        }
+        this._raw_data = this._io.readBytes(dataLen());
+        KaitaiStream _io__raw_data = new ByteBufferKaitaiStream(_raw_data);
+        this.data = new DataBlock(_io__raw_data, this, _root);
         this.checksum = this._io.readBytes(2);
         this.magicEnd = this._io.ensureFixedContents(new byte[] { 119 });
     }
@@ -94,11 +77,11 @@ public class BasicInfo extends KaitaiStruct {
             this(_io, null, null);
         }
 
-        public BalanceList(KaitaiStream _io, BasicInfo _parent) {
+        public BalanceList(KaitaiStream _io, BasicInfo.DataBlock _parent) {
             this(_io, _parent, null);
         }
 
-        public BalanceList(KaitaiStream _io, BasicInfo _parent, BasicInfo _root) {
+        public BalanceList(KaitaiStream _io, BasicInfo.DataBlock _parent, BasicInfo _root) {
             super(_io);
             this._parent = _parent;
             this._root = _root;
@@ -112,10 +95,10 @@ public class BasicInfo extends KaitaiStruct {
         }
         private ArrayList<Boolean> flag;
         private BasicInfo _root;
-        private BasicInfo _parent;
+        private BasicInfo.DataBlock _parent;
         public ArrayList<Boolean> flag() { return flag; }
         public BasicInfo _root() { return _root; }
-        public BasicInfo _parent() { return _parent; }
+        public BasicInfo.DataBlock _parent() { return _parent; }
     }
     public static class ProtList extends KaitaiStruct {
         public static ProtList fromFile(String fileName) throws IOException {
@@ -126,11 +109,11 @@ public class BasicInfo extends KaitaiStruct {
             this(_io, null, null);
         }
 
-        public ProtList(KaitaiStream _io, BasicInfo _parent) {
+        public ProtList(KaitaiStream _io, BasicInfo.DataBlock _parent) {
             this(_io, _parent, null);
         }
 
-        public ProtList(KaitaiStream _io, BasicInfo _parent, BasicInfo _root) {
+        public ProtList(KaitaiStream _io, BasicInfo.DataBlock _parent, BasicInfo _root) {
             super(_io);
             this._parent = _parent;
             this._root = _root;
@@ -144,10 +127,10 @@ public class BasicInfo extends KaitaiStruct {
         }
         private ArrayList<Boolean> flag;
         private BasicInfo _root;
-        private BasicInfo _parent;
+        private BasicInfo.DataBlock _parent;
         public ArrayList<Boolean> flag() { return flag; }
         public BasicInfo _root() { return _root; }
-        public BasicInfo _parent() { return _parent; }
+        public BasicInfo.DataBlock _parent() { return _parent; }
     }
     public static class FetBits extends KaitaiStruct {
         public static FetBits fromFile(String fileName) throws IOException {
@@ -158,11 +141,11 @@ public class BasicInfo extends KaitaiStruct {
             this(_io, null, null);
         }
 
-        public FetBits(KaitaiStream _io, BasicInfo _parent) {
+        public FetBits(KaitaiStream _io, BasicInfo.DataBlock _parent) {
             this(_io, _parent, null);
         }
 
-        public FetBits(KaitaiStream _io, BasicInfo _parent, BasicInfo _root) {
+        public FetBits(KaitaiStream _io, BasicInfo.DataBlock _parent, BasicInfo _root) {
             super(_io);
             this._parent = _parent;
             this._root = _root;
@@ -175,11 +158,122 @@ public class BasicInfo extends KaitaiStruct {
         private FetBit charge;
         private FetBit discharge;
         private BasicInfo _root;
-        private BasicInfo _parent;
+        private BasicInfo.DataBlock _parent;
         public FetBit charge() { return charge; }
         public FetBit discharge() { return discharge; }
         public BasicInfo _root() { return _root; }
+        public BasicInfo.DataBlock _parent() { return _parent; }
+    }
+    public static class DataBlock extends KaitaiStruct {
+        public static DataBlock fromFile(String fileName) throws IOException {
+            return new DataBlock(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public DataBlock(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public DataBlock(KaitaiStream _io, BasicInfo _parent) {
+            this(_io, _parent, null);
+        }
+
+        public DataBlock(KaitaiStream _io, BasicInfo _parent, BasicInfo _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.total = this._io.readU2be();
+            this.current = this._io.readU2be();
+            this.remainCap = this._io.readU2be();
+            this.typCap = this._io.readU2be();
+            this.cycles = this._io.readU2be();
+            this.prodDate = this._io.readU2be();
+            this.balanceStatus = new BalanceList(this._io, this, _root);
+            this.protStatus = new ProtList(this._io, this, _root);
+            this.softwareVersion = this._io.readU1();
+            this.remainCapPercent = this._io.readU1();
+            this._raw_fetStatus = this._io.readBytes(1);
+            KaitaiStream _io__raw_fetStatus = new ByteBufferKaitaiStream(_raw_fetStatus);
+            this.fetStatus = new FetBits(_io__raw_fetStatus, this, _root);
+            this.cellCount = this._io.readU1();
+            this.tempCount = this._io.readU1();
+            tempValue = new ArrayList<Integer>((int) (tempCount()));
+            for (int i = 0; i < tempCount(); i++) {
+                this.tempValue.add(this._io.readU2be());
+            }
+        }
+        private int total;
+        private int current;
+        private int remainCap;
+        private int typCap;
+        private int cycles;
+        private int prodDate;
+        private BalanceList balanceStatus;
+        private ProtList protStatus;
+        private int softwareVersion;
+        private int remainCapPercent;
+        private FetBits fetStatus;
+        private int cellCount;
+        private int tempCount;
+        private ArrayList<Integer> tempValue;
+        private BasicInfo _root;
+        private BasicInfo _parent;
+        private byte[] _raw_fetStatus;
+
+        /**
+         * Pack voltage (raw)
+         */
+        public int total() { return total; }
+
+        /**
+         * Actual current (raw)
+         */
+        public int current() { return current; }
+
+        /**
+         * Capacity (raw)
+         */
+        public int remainCap() { return remainCap; }
+
+        /**
+         * Capacity (raw)
+         */
+        public int typCap() { return typCap; }
+
+        /**
+         * Cycle times
+         */
+        public int cycles() { return cycles; }
+
+        /**
+         * Production date
+         */
+        public int prodDate() { return prodDate; }
+
+        /**
+         * List of balance bits
+         */
+        public BalanceList balanceStatus() { return balanceStatus; }
+
+        /**
+         * List of protection bits
+         */
+        public ProtList protStatus() { return protStatus; }
+        public int softwareVersion() { return softwareVersion; }
+
+        /**
+         * Portion of remaining capacity
+         */
+        public int remainCapPercent() { return remainCapPercent; }
+        public FetBits fetStatus() { return fetStatus; }
+        public int cellCount() { return cellCount; }
+        public int tempCount() { return tempCount; }
+        public ArrayList<Integer> tempValue() { return tempValue; }
+        public BasicInfo _root() { return _root; }
         public BasicInfo _parent() { return _parent; }
+        public byte[] _raw_fetStatus() { return _raw_fetStatus; }
     }
     private Double totalV;
 
@@ -189,7 +283,7 @@ public class BasicInfo extends KaitaiStruct {
     public Double totalV() {
         if (this.totalV != null)
             return this.totalV;
-        double _tmp = (double) ((total() * 0.01));
+        double _tmp = (double) ((data().total() * 0.01));
         this.totalV = _tmp;
         return this.totalV;
     }
@@ -201,7 +295,7 @@ public class BasicInfo extends KaitaiStruct {
     public Double currentA() {
         if (this.currentA != null)
             return this.currentA;
-        double _tmp = (double) ((current() * 0.01));
+        double _tmp = (double) ((data().current() * 0.01));
         this.currentA = _tmp;
         return this.currentA;
     }
@@ -213,7 +307,7 @@ public class BasicInfo extends KaitaiStruct {
     public Double remainCapAh() {
         if (this.remainCapAh != null)
             return this.remainCapAh;
-        double _tmp = (double) ((remainCap() * 0.01));
+        double _tmp = (double) ((data().remainCap() * 0.01));
         this.remainCapAh = _tmp;
         return this.remainCapAh;
     }
@@ -225,7 +319,7 @@ public class BasicInfo extends KaitaiStruct {
     public Double typCapAh() {
         if (this.typCapAh != null)
             return this.typCapAh;
-        double _tmp = (double) ((typCap() * 0.01));
+        double _tmp = (double) ((data().typCap() * 0.01));
         this.typCapAh = _tmp;
         return this.typCapAh;
     }
@@ -233,112 +327,20 @@ public class BasicInfo extends KaitaiStruct {
     private byte[] magicCmd;
     private byte[] magicStatus;
     private int dataLen;
-    private int total;
-    private int current;
-    private int remainCap;
-    private int typCap;
-    private int cycles;
-    private int prodDate;
-    private BalanceList balanceStatus;
-    private ProtList protStatus;
-    private int softwareVersion;
-    private int remainCapPercent;
-    private FetBits fetStatus;
-    private int cellCount;
-    private int tempCount;
-    private ArrayList<Integer> tempValue;
+    private DataBlock data;
     private byte[] checksum;
     private byte[] magicEnd;
     private BasicInfo _root;
     private KaitaiStruct _parent;
-    private byte[] _raw_fetStatus;
+    private byte[] _raw_data;
     public byte[] magicStart() { return magicStart; }
     public byte[] magicCmd() { return magicCmd; }
     public byte[] magicStatus() { return magicStatus; }
     public int dataLen() { return dataLen; }
-
-    /**
-     * Pack voltage (raw)
-     */
-    public int total() { return total; }
-
-    /**
-     * Actual current (raw)
-     */
-    public int current() { return current; }
-
-    /**
-     * Capacity (raw)
-     */
-    public int remainCap() { return remainCap; }
-
-    /**
-     * Capacity (raw)
-     */
-    public int typCap() { return typCap; }
-
-    /**
-     * Cycle times
-     */
-    public int cycles() { return cycles; }
-
-    /**
-     * Production date
-     */
-    public int prodDate() { return prodDate; }
-
-    /**
-     * List of balance bits
-     */
-    public BalanceList balanceStatus() { return balanceStatus; }
-
-    /**
-     * List of protection bits
-     */
-    public ProtList protStatus() { return protStatus; }
-    public int softwareVersion() { return softwareVersion; }
-
-    /**
-     * Portion of remaining capacity
-     */
-    public int remainCapPercent() { return remainCapPercent; }
-    public FetBits fetStatus() { return fetStatus; }
-    public int cellCount() { return cellCount; }
-    public int tempCount() { return tempCount; }
-    public ArrayList<Integer> tempValue() { return tempValue; }
+    public DataBlock data() { return data; }
     public byte[] checksum() { return checksum; }
     public byte[] magicEnd() { return magicEnd; }
     public BasicInfo _root() { return _root; }
     public KaitaiStruct _parent() { return _parent; }
-    public byte[] _raw_fetStatus() { return _raw_fetStatus; }
-
-    @Override
-    public String toString() {
-        return "BasicInfo{" +
-                " \n totalV=" + totalV() +
-                ", \n currentA=" + currentA() +
-                ", \n remainCapAh=" + remainCapAh() +
-                ", \n typCapAh=" + typCapAh() +
-                ", \n magicStart=" + Arrays.toString(magicStart) +
-                ", \n magicCmd=" + Arrays.toString(magicCmd) +
-                ", \n magicStatus=" + Arrays.toString(magicStatus) +
-                ", \n dataLen=" + dataLen +
-                ", \n total=" + total +
-                ", \n current=" + current +
-                ", \n remainCap=" + remainCap +
-                ", \n typCap=" + typCap +
-                ", \n cycles=" + cycles +
-                ", \n prodDate=" + prodDate +
-                ", \n balanceStatus=" + balanceStatus.flag() +
-                ", \n protStatus=" + protStatus.flag() +
-                ", \n softwareVersion=" + softwareVersion +
-                ", \n remainCapPercent=" + remainCapPercent +
-                ", \n fetStatus=" + fetStatus.charge + fetStatus.discharge +
-                ", \n cellCount=" + cellCount +
-                ", \n tempCount=" + tempCount +
-                ", \n tempValue=" + tempValue +
-                ", \n checksum=" + Arrays.toString(checksum) +
-                ", \n magicEnd=" + Arrays.toString(magicEnd) +
-                '}';
-    }
+    public byte[] _raw_data() { return _raw_data; }
 }

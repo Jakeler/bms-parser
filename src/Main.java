@@ -1,5 +1,8 @@
 import io.kaitai.struct.*;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+
 public class Main {
 
 	public static void main(String[] args) {
@@ -17,14 +20,25 @@ public class Main {
 			0x0f, 0xa7, 0xf8, 0x18, 0x77});
 
 		var info = new BasicInfo(new ByteBufferKaitaiStream(input));
-		System.out.println(info.totalV());
-		System.out.println(info.balanceStatus().flag());
-		System.out.println("Charge"+ info.fetStatus().charge() + " Discharge" + info.fetStatus().charge());
-		System.out.println(info.toString());
-
 		var cells = new CellVoltages(new ByteBufferKaitaiStream(input2));
+		printInfo(info, cells);
+	}
+
+	static void printInfo(BasicInfo info, CellVoltages cells) {
+		System.out.println("Pack voltage: " + info.totalV() + " V");
+		System.out.println("Current: " + info.currentA()  + " A");
+		System.out.printf("Remaining capacity: %f Ah (%d %%)\n", info.remainCapAh(), info.data().remainCapPercent());
+		System.out.println("Balancing " + info.data().balanceStatus().flag());
+		System.out.println("Charge:"+ info.data().fetStatus().charge() + " Discharge:" + info.data().fetStatus().charge());
+		System.out.println("Cycle count = " + info.data().cycles());
+		System.out.printf("Temp1: %f C, Temp2: %f C\n", tempToCelsius(info.data().tempValue().get(0)), tempToCelsius(info.data().tempValue().get(1)));
+
 		System.out.println("Count " + cells.count());
 		System.out.println("Cells " + cells.cells());
+	}
+
+	static double tempToCelsius(int raw) {
+		return (raw - 2731) * 0.1;
 	}
 	
 	static byte[] int2byte(int[] in) {
