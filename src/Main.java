@@ -29,6 +29,7 @@ public class Main {
 		System.out.println("Current: " + info.currentA()  + " A");
 		System.out.printf("Remaining capacity: %f Ah (%d %%)\n", info.remainCapAh(), info.data().remainCapPercent());
 		System.out.println("Balancing " + info.data().balanceStatus().flag());
+		System.out.println("Protection " + info.data().protStatus().toString());
 		System.out.println("Charge:"+ info.data().fetStatus().charge() + " Discharge:" + info.data().fetStatus().charge());
 		System.out.println("Cycle count = " + info.data().cycles());
 		System.out.printf("Temp1: %f C, Temp2: %f C\n", tempToCelsius(info.data().tempValue().get(0)), tempToCelsius(info.data().tempValue().get(1)));

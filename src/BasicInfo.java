@@ -120,17 +120,69 @@ public class BasicInfo extends KaitaiStruct {
             _read();
         }
         private void _read() {
-            flag = new ArrayList<Boolean>((int) ((2 * 8)));
-            for (int i = 0; i < (2 * 8); i++) {
-                this.flag.add(this._io.readBitsInt(1) != 0);
-            }
+            this.ovpCell = this._io.readBitsInt(1) != 0;
+            this.uvpCell = this._io.readBitsInt(1) != 0;
+            this.ovpPack = this._io.readBitsInt(1) != 0;
+            this.uvpPack = this._io.readBitsInt(1) != 0;
+            this.otpCharge = this._io.readBitsInt(1) != 0;
+            this.utpCharge = this._io.readBitsInt(1) != 0;
+            this.otpDischarge = this._io.readBitsInt(1) != 0;
+            this.utpDischarge = this._io.readBitsInt(1) != 0;
+            this.ocpCharge = this._io.readBitsInt(1) != 0;
+            this.ocpDischarge = this._io.readBitsInt(1) != 0;
+            this.ocpShort = this._io.readBitsInt(1) != 0;
+            this.icError = this._io.readBitsInt(1) != 0;
+            this.fetLock = this._io.readBitsInt(1) != 0;
         }
-        private ArrayList<Boolean> flag;
+        private boolean ovpCell;
+        private boolean uvpCell;
+        private boolean ovpPack;
+        private boolean uvpPack;
+        private boolean otpCharge;
+        private boolean utpCharge;
+        private boolean otpDischarge;
+        private boolean utpDischarge;
+        private boolean ocpCharge;
+        private boolean ocpDischarge;
+        private boolean ocpShort;
+        private boolean icError;
+        private boolean fetLock;
         private BasicInfo _root;
         private BasicInfo.DataBlock _parent;
-        public ArrayList<Boolean> flag() { return flag; }
+        public boolean ovpCell() { return ovpCell; }
+        public boolean uvpCell() { return uvpCell; }
+        public boolean ovpPack() { return ovpPack; }
+        public boolean uvpPack() { return uvpPack; }
+        public boolean otpCharge() { return otpCharge; }
+        public boolean utpCharge() { return utpCharge; }
+        public boolean otpDischarge() { return otpDischarge; }
+        public boolean utpDischarge() { return utpDischarge; }
+        public boolean ocpCharge() { return ocpCharge; }
+        public boolean ocpDischarge() { return ocpDischarge; }
+        public boolean ocpShort() { return ocpShort; }
+        public boolean icError() { return icError; }
+        public boolean fetLock() { return fetLock; }
         public BasicInfo _root() { return _root; }
         public BasicInfo.DataBlock _parent() { return _parent; }
+
+        @Override
+        public String toString() {
+            return "ProtList{" +
+                    "ovpCell=" + ovpCell +
+                    ", uvpCell=" + uvpCell +
+                    ", ovpPack=" + ovpPack +
+                    ", uvpPack=" + uvpPack +
+                    ", otpCharge=" + otpCharge +
+                    ", utpCharge=" + utpCharge +
+                    ", otpDischarge=" + otpDischarge +
+                    ", utpDischarge=" + utpDischarge +
+                    ", ocpCharge=" + ocpCharge +
+                    ", ocpDischarge=" + ocpDischarge +
+                    ", ocpShort=" + ocpShort +
+                    ", icError=" + icError +
+                    ", fetLock=" + fetLock +
+                    '}';
+        }
     }
     public static class FetBits extends KaitaiStruct {
         public static FetBits fromFile(String fileName) throws IOException {
@@ -191,7 +243,9 @@ public class BasicInfo extends KaitaiStruct {
             this.cycles = this._io.readU2be();
             this.prodDate = this._io.readU2be();
             this.balanceStatus = new BalanceList(this._io, this, _root);
-            this.protStatus = new ProtList(this._io, this, _root);
+            this._raw_protStatus = this._io.readBytes(2);
+            KaitaiStream _io__raw_protStatus = new ByteBufferKaitaiStream(_raw_protStatus);
+            this.protStatus = new ProtList(_io__raw_protStatus, this, _root);
             this.softwareVersion = this._io.readU1();
             this.remainCapPercent = this._io.readU1();
             this._raw_fetStatus = this._io.readBytes(1);
@@ -220,6 +274,7 @@ public class BasicInfo extends KaitaiStruct {
         private ArrayList<Integer> tempValue;
         private BasicInfo _root;
         private BasicInfo _parent;
+        private byte[] _raw_protStatus;
         private byte[] _raw_fetStatus;
 
         /**
@@ -273,6 +328,7 @@ public class BasicInfo extends KaitaiStruct {
         public ArrayList<Integer> tempValue() { return tempValue; }
         public BasicInfo _root() { return _root; }
         public BasicInfo _parent() { return _parent; }
+        public byte[] _raw_protStatus() { return _raw_protStatus; }
         public byte[] _raw_fetStatus() { return _raw_fetStatus; }
     }
     private Double totalV;

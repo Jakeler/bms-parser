@@ -18,7 +18,6 @@ seq:
   - id: magic_end
     contents: [0x77]
 
-
 enums:
   status:
     0x00: ok
@@ -34,12 +33,35 @@ types:
         type: b1
         repeat: expr
         repeat-expr: 4*8
-  prot_list: # TODO: specify all bits...
+  prot_list:
     seq:
-      - id: flag
+      - id: ovp_cell
         type: b1
-        repeat: expr
-        repeat-expr: 2*8
+      - id: uvp_cell
+        type: b1
+      - id: ovp_pack
+        type: b1
+      - id: uvp_pack
+        type: b1
+      - id: otp_charge
+        type: b1
+      - id: utp_charge
+        type: b1
+      - id: otp_discharge
+        type: b1
+      - id: utp_discharge
+        type: b1
+      - id: ocp_charge
+        type: b1
+      - id: ocp_discharge
+        type: b1
+      - id: ocp_short
+        type: b1
+      - id: ic_error
+        type: b1
+      - id: fet_lock
+        type: b1
+              
   fet_bits:
     seq:
       - id: charge
@@ -73,6 +95,7 @@ types:
         doc: List of balance bits
       - id: prot_status
         type: prot_list
+        size: 2
         doc: List of protection bits
       - id: software_version
         type: u1
