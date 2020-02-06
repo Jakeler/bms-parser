@@ -1,4 +1,4 @@
-from basic_info import BasicInfo
+from packet import Packet
 from pprint import pp, pprint
 
 def recurse_vars(obj):
@@ -11,6 +11,10 @@ def recurse_vars(obj):
             out[key] = recurse_vars(val)
     return out
 
-d = BasicInfo.from_bytes(b"\xdd\x03\x00\x1b\x118\x00b\x00\xa4\x04\xb0\x00\x00'n\x02\x82\x00\x00" + b'\x00\x00!\x0e\x03\x0b\x02\x0b"\x0b\x10\xfcBw')
+d = Packet.from_bytes(b"\xdd\x03\x00\x1b\x118\x00b\x00\xa4\x04\xb0\x00\x00'n\x02\x82\x00\x00" + b'\x00\x00!\x0e\x03\x0b\x02\x0b"\x0b\x10\xfcBw')
+
 pp(recurse_vars(d))
-pp(d._io._io)
+
+pp(d.data.total_v)
+pp(d.data.current_a)
+pp(d.data.remain_cap_ah)
