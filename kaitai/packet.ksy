@@ -4,7 +4,7 @@ meta:
   imports:
     - basic_info
     - cell_voltages
-
+    - hardware
 seq:
   - id: magic_start
     contents: [0xdd]
@@ -19,7 +19,8 @@ seq:
       switch-on: cmd
       cases:
         0x03: basic_info
-        0x04: cell_voltages
+        0x04: cell_voltages(data_len)
+        0x05: hardware
     size: data_len
   - id: checksum
     size: 2
