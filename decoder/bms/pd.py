@@ -20,6 +20,9 @@
 
 import sigrokdecode as srd
 
+from .lib.packet import Packet
+from .lib import basic_info, cell_voltages, hardware
+
 class Decoder(srd.Decoder):
     api_version = 3
     id = 'bms'
@@ -51,6 +54,7 @@ class Decoder(srd.Decoder):
         self.samplenum = 0
         self.frame_start = -1
         self.frame_end = -1
+        self.packet = [0xdd]
         self.state = 'WAIT FOR START'
 
     def start(self):
@@ -79,17 +83,52 @@ class Decoder(srd.Decoder):
     value of the UART data, and a boolean which reflects the validity of the
     UART frame.
     '''
+
+    def parse(self) -> str:
+        try:
+            print('Parsing', self.packet)
+            pkt = Packet.from_bytes(bytes(self.packet))
+            res = f'Packet with {pkt.cmd}'
+
+            if isinstance(pkt.body, Packet.ReadReq):
+                res = f'Read request, ID {pkt.body.req_cmd}'
+            elif isinstance(pkt.body, Packet.WriteReq):
+                res = f'Write request, ID {pkt.body.req_cmd}'
+            elif isinstance(pkt.body, Packet.Response):
+                data = pkt.body.data
+                res = f'Response {pkt.body.status.name}, Type {data.__class__.__name__}: '
+                if isinstance(data, basic_info.BasicInfo):
+                    res += f'{data.total_v} V, {data.current_a} A, {data.remain_cap_percent} %, '
+                    res += f'{data.cell_count} Cells, {data.cycles} Cycles'
+                elif isinstance(data, cell_voltages.CellVoltages):
+                    res += ', '.join([(str(c/100)+" V") for c in data.cells])
+                elif isinstance(data, hardware.Hardware):
+                    res += data.version
+                elif isinstance(data, bytes):
+                    res += data.hex(' ')
+            return res
+        except Exception as e:
+            return f'Failed: {e}'
+
+
     def decode(self, ss, es, data):
         ptype, rxtx, pdata = data
         if ptype == 'FRAME':
-            print(ptype, ss, es, pdata)
+            # print(ptype, ss, es, pdata)
             value, valid = pdata
+            self.packet.append(value)
+
             if value == 0xdd:
+                self.reset()
                 self.frame_start = es
                 self.put(ss, es, self.out_ann, [0, ['Start Byte']])
-            if value == 0x77:
-               self.put(ss, es, self.out_ann, [4, ['Stop Byte']])
-               self.frame_end = ss
-               self.put(self.frame_start, self.frame_end, self.out_ann, [2, ['Content']])
+            elif value == 0x77:
+                self.put(ss, es, self.out_ann, [4, ['Stop Byte']])
+                self.frame_end = ss
+
+                result = self.parse()
+                self.put(self.frame_start, self.frame_end, self.out_ann, [2, [result]])
+
+
 
 
