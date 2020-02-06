@@ -4,6 +4,16 @@ meta:
 
 seq:
   - id: cells
-    type: u2
+    type: voltage
     repeat: eos
-    doc: Cell voltages in 10 mV
+
+types:
+  voltage:
+    seq:
+      - id: raw
+        type: u2
+        doc: Cell voltage (raw)
+    instances:
+      volt:
+        value: raw * 0.01
+        doc: Cell voltage (V)

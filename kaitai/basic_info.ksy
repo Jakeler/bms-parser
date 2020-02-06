@@ -4,17 +4,13 @@ meta:
 
 seq:
   - id: total
-    type: u2
-    doc: Pack voltage (raw)
+    type: voltage
   - id: current
-    type: u2
-    doc: Actual current (raw)
+    type: current
   - id: remain_cap
-    type: u2
-    doc: Capacity (raw)
+    type: capacity
   - id: typ_cap
-    type: u2
-    doc: Capacity (raw)
+    type: capacity
   - id: cycles
     type: u2
     doc: Cycle times
@@ -38,12 +34,13 @@ seq:
     size: 1
   - id: cell_count
     type: u1
-  - id: temp_count
+  - id: ntc_count
     type: u1
-  - id: temp_value
-    type: u2
+  - id: temps
+    type: temp
+    size: 2
     repeat: expr
-    repeat-expr: temp_count
+    repeat-expr: ntc_count
 
 
 enums:
@@ -86,7 +83,6 @@ types:
         type: b1
       - id: fet_lock
         type: b1
-              
   fet_bits:
     seq:
       - id: charge
@@ -95,20 +91,37 @@ types:
       - id: discharge
         type: b1
         enum: fet_bit
-
-instances:
-  total_v:
-    value: total * 0.01
-    doc: Pack voltage (V)
-  current_a:
-    value: current * 0.01
-    doc: Actual current (A)
-  remain_cap_ah:
-    value: remain_cap * 0.01
-    doc: Capacity (Ah)
-  typ_cap_ah:
-    value: typ_cap * 0.01
-    doc: Capacity (Ah)
-  # temp_celsius:
-  #   value: temp_value * 0.1 - 273.1
-  #   doc: Temperature of NTCs
+  voltage:
+    seq:
+      - id: raw
+        type: u2
+        doc: Pack voltage (raw)
+    instances:
+      volt:
+        value: raw * 0.01
+        doc: Pack voltage (V)
+  capacity:
+    seq:
+      - id: raw
+        type: u2
+        doc: Capacity (raw)
+    instances:
+      amp_hour:
+        value: raw * 0.01
+        doc: Capacity (Ah)
+  current:
+    seq:
+      - id: raw
+        type: u2
+        doc: Actual current (raw)
+    instances:
+      amp:
+        value: raw * 0.01
+        doc: Actual current (A)
+  temp:
+    seq:
+      - id: raw
+        type: u2
+    instances:
+      celsius:
+        value: raw * 0.1 - 273.1

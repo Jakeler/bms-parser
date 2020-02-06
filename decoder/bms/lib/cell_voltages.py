@@ -18,8 +18,28 @@ class CellVoltages(KaitaiStruct):
         self.cells = []
         i = 0
         while not self._io.is_eof():
-            self.cells.append(self._io.read_u2be())
+            self.cells.append(self._root.Voltage(self._io, self, self._root))
             i += 1
+
+
+    class Voltage(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.raw = self._io.read_u2be()
+
+        @property
+        def volt(self):
+            """Cell voltage (V)."""
+            if hasattr(self, '_m_volt'):
+                return self._m_volt if hasattr(self, '_m_volt') else None
+
+            self._m_volt = (self.raw * 0.01)
+            return self._m_volt if hasattr(self, '_m_volt') else None
 
 
 

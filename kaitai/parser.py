@@ -15,10 +15,11 @@ def recurse_vars(obj):
 d = Packet.from_bytes(b"\xdd\x03\x00\x1b\x118\x00b\x00\xa4\x04\xb0\x00\x00'n\x02\x82\x00\x00" + b'\x00\x00!\x0e\x03\x0b\x02\x0b"\x0b\x10\xfcBw')
 
 pp(recurse_vars(d))
+pp(d.body.data.temps[0].celsius)
 
-pp(d.body.data.total_v)
-pp(d.body.data.current_a)
-pp(d.body.data.remain_cap_ah)
+pp(d.body.data.total.volt)
+pp(d.body.data.current.amp)
+pp(d.body.data.remain_cap.amp_hour)
 
 # Cells
 d2 = Packet.from_bytes(b'\xdd\x04\x00\x16\x0f\xa7\x0f\xa5\x0f\xa1\x0f\x98\x0f\x9e\x0f\xa0\x0f\xb1\x0f\xbb' + b'\x0f\xb1\x0f\xa6\x0f\xa7\xf8\x18w',)

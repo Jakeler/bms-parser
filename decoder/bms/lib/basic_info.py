@@ -20,10 +20,10 @@ class BasicInfo(KaitaiStruct):
         self._read()
 
     def _read(self):
-        self.total = self._io.read_u2be()
-        self.current = self._io.read_u2be()
-        self.remain_cap = self._io.read_u2be()
-        self.typ_cap = self._io.read_u2be()
+        self.total = self._root.Voltage(self._io, self, self._root)
+        self.current = self._root.Current(self._io, self, self._root)
+        self.remain_cap = self._root.Capacity(self._io, self, self._root)
+        self.typ_cap = self._root.Capacity(self._io, self, self._root)
         self.cycles = self._io.read_u2be()
         self.prod_date = self._io.read_u2be()
         self.balance_status = self._root.BalanceList(self._io, self, self._root)
@@ -36,13 +36,16 @@ class BasicInfo(KaitaiStruct):
         io = KaitaiStream(BytesIO(self._raw_fet_status))
         self.fet_status = self._root.FetBits(io, self, self._root)
         self.cell_count = self._io.read_u1()
-        self.temp_count = self._io.read_u1()
-        self.temp_value = [None] * (self.temp_count)
-        for i in range(self.temp_count):
-            self.temp_value[i] = self._io.read_u2be()
+        self.ntc_count = self._io.read_u1()
+        self._raw_temps = [None] * (self.ntc_count)
+        self.temps = [None] * (self.ntc_count)
+        for i in range(self.ntc_count):
+            self._raw_temps[i] = self._io.read_bytes(2)
+            io = KaitaiStream(BytesIO(self._raw_temps[i]))
+            self.temps[i] = self._root.Temp(io, self, self._root)
 
 
-    class BalanceList(KaitaiStruct):
+    class FetBits(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -50,10 +53,8 @@ class BasicInfo(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.flag = [None] * (32)
-            for i in range(32):
-                self.flag[i] = self._io.read_bits_int(1) != 0
-
+            self.charge = self._root.FetBit(self._io.read_bits_int(1))
+            self.discharge = self._root.FetBit(self._io.read_bits_int(1))
 
 
     class ProtList(KaitaiStruct):
@@ -79,7 +80,7 @@ class BasicInfo(KaitaiStruct):
             self.fet_lock = self._io.read_bits_int(1) != 0
 
 
-    class FetBits(KaitaiStruct):
+    class Temp(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -87,44 +88,89 @@ class BasicInfo(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.charge = self._root.FetBit(self._io.read_bits_int(1))
-            self.discharge = self._root.FetBit(self._io.read_bits_int(1))
+            self.raw = self._io.read_u2be()
+
+        @property
+        def celsius(self):
+            if hasattr(self, '_m_celsius'):
+                return self._m_celsius if hasattr(self, '_m_celsius') else None
+
+            self._m_celsius = ((self.raw * 0.1) - 273.1)
+            return self._m_celsius if hasattr(self, '_m_celsius') else None
 
 
-    @property
-    def total_v(self):
-        """Pack voltage (V)."""
-        if hasattr(self, '_m_total_v'):
-            return self._m_total_v if hasattr(self, '_m_total_v') else None
+    class Current(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
 
-        self._m_total_v = (self.total * 0.01)
-        return self._m_total_v if hasattr(self, '_m_total_v') else None
+        def _read(self):
+            self.raw = self._io.read_u2be()
 
-    @property
-    def current_a(self):
-        """Actual current (A)."""
-        if hasattr(self, '_m_current_a'):
-            return self._m_current_a if hasattr(self, '_m_current_a') else None
+        @property
+        def amp(self):
+            """Actual current (A)."""
+            if hasattr(self, '_m_amp'):
+                return self._m_amp if hasattr(self, '_m_amp') else None
 
-        self._m_current_a = (self.current * 0.01)
-        return self._m_current_a if hasattr(self, '_m_current_a') else None
+            self._m_amp = (self.raw * 0.01)
+            return self._m_amp if hasattr(self, '_m_amp') else None
 
-    @property
-    def remain_cap_ah(self):
-        """Capacity (Ah)."""
-        if hasattr(self, '_m_remain_cap_ah'):
-            return self._m_remain_cap_ah if hasattr(self, '_m_remain_cap_ah') else None
 
-        self._m_remain_cap_ah = (self.remain_cap * 0.01)
-        return self._m_remain_cap_ah if hasattr(self, '_m_remain_cap_ah') else None
+    class Voltage(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
 
-    @property
-    def typ_cap_ah(self):
-        """Capacity (Ah)."""
-        if hasattr(self, '_m_typ_cap_ah'):
-            return self._m_typ_cap_ah if hasattr(self, '_m_typ_cap_ah') else None
+        def _read(self):
+            self.raw = self._io.read_u2be()
 
-        self._m_typ_cap_ah = (self.typ_cap * 0.01)
-        return self._m_typ_cap_ah if hasattr(self, '_m_typ_cap_ah') else None
+        @property
+        def volt(self):
+            """Pack voltage (V)."""
+            if hasattr(self, '_m_volt'):
+                return self._m_volt if hasattr(self, '_m_volt') else None
+
+            self._m_volt = (self.raw * 0.01)
+            return self._m_volt if hasattr(self, '_m_volt') else None
+
+
+    class BalanceList(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.flag = [None] * (32)
+            for i in range(32):
+                self.flag[i] = self._io.read_bits_int(1) != 0
+
+
+
+    class Capacity(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.raw = self._io.read_u2be()
+
+        @property
+        def amp_hour(self):
+            """Capacity (Ah)."""
+            if hasattr(self, '_m_amp_hour'):
+                return self._m_amp_hour if hasattr(self, '_m_amp_hour') else None
+
+            self._m_amp_hour = (self.raw * 0.01)
+            return self._m_amp_hour if hasattr(self, '_m_amp_hour') else None
+
 
 

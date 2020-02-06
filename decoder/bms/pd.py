@@ -21,7 +21,7 @@
 import sigrokdecode as srd
 
 from .lib.packet import Packet
-from .lib import basic_info, cell_voltages, hardware
+from .lib import packet
 
 class Decoder(srd.Decoder):
     api_version = 3
@@ -41,7 +41,7 @@ class Decoder(srd.Decoder):
         ('stop', 'Stop Byte'),
     )
     annotation_rows = (
-        ('data', 'BMS', (0,1,2,3,4)),
+        ('data', 'Packets', (0,1,2,3,4)),
     )
     options = (
         {'id': 'dir', 'desc': 'Direction', 'default': 'TX', 'values': ('TX', 'RX')},
@@ -60,29 +60,6 @@ class Decoder(srd.Decoder):
     def start(self):
         self.out_ann = self.register(srd.OUTPUT_ANN)
 
-    '''
-    OUTPUT_PYTHON format:
-
-    Packet:
-    [<ptype>, <rxtx>, <pdata>]
-
-    This is the list of <ptype>s and their respective <pdata> values:
-    - 'STARTBIT': The data is the (integer) value of the start bit (0/1).
-    - 'DATA': This is always a tuple containing two items:
-    - 1st item: the (integer) value of the UART data. Valid values
-        range from 0 to 511 (as the data can be up to 9 bits in size).
-    - 2nd item: the list of individual data bits and their ss/es numbers.
-    - 'PARITYBIT': The data is the (integer) value of the parity bit (0/1).
-    - 'STOPBIT': The data is the (integer) value of the stop bit (0 or 1).
-    - 'INVALID STARTBIT': The data is the (integer) value of the start bit (0/1).
-    - 'INVALID STOPBIT': The data is the (integer) value of the stop bit (0/1).
-    - 'PARITY ERROR': The data is a tuple with two entries. The first one is
-    the expected parity value, the second is the actual parity value.
-    - 'BREAK': The data is always 0.
-    - 'FRAME': The data is always a tuple containing two items: The (integer)
-    value of the UART data, and a boolean which reflects the validity of the
-    UART frame.
-    '''
 
     def parse(self) -> str:
         try:
@@ -97,12 +74,12 @@ class Decoder(srd.Decoder):
             elif isinstance(pkt.body, Packet.Response):
                 data = pkt.body.data
                 res = f'Response {pkt.body.status.name}, Type {data.__class__.__name__}: '
-                if isinstance(data, basic_info.BasicInfo):
-                    res += f'{data.total_v} V, {data.current_a} A, {data.remain_cap_percent} %, '
-                    res += f'{data.cell_count} Cells, {data.cycles} Cycles'
-                elif isinstance(data, cell_voltages.CellVoltages):
-                    res += ', '.join([(str(c/100)+" V") for c in data.cells])
-                elif isinstance(data, hardware.Hardware):
+                if isinstance(data, packet.BasicInfo):
+                    res += f'{data.total.volt} V, {data.current.amp} A, {data.remain_cap_percent} %, '
+                    res += f'{data.cell_count} Cells, {data.cycles} Cycles, T {[(str(t.celsius)+" °C") for t in data.temps]}'
+                elif isinstance(data, packet.CellVoltages):
+                    res += ', '.join([(str(c.volt)+" V") for c in data.cells])
+                elif isinstance(data, packet.Hardware):
                     res += data.version
                 elif isinstance(data, bytes):
                     res += data.hex(' ')
@@ -113,7 +90,7 @@ class Decoder(srd.Decoder):
 
     def decode(self, ss, es, data):
         ptype, rxtx, pdata = data
-        if ptype == 'FRAME':
+        if ptype == 'FRAME': # FRAME contains start/stop bit samples, oyterwise use DATA
             # print(ptype, ss, es, pdata)
             value, valid = pdata
             self.packet.append(value)
