@@ -47,9 +47,6 @@ seq:
 
 
 enums:
-  status:
-    0x00: ok
-    0x80: fail
   fet_bit:
     0: off
     1: on
