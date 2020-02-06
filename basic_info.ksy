@@ -32,7 +32,7 @@ types:
       - id: flag
         type: b1
         repeat: expr
-        repeat-expr: 4*8
+        repeat-expr: 32
   prot_list:
     seq:
       - id: ovp_cell
