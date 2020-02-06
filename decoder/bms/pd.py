@@ -48,7 +48,10 @@ class Decoder(srd.Decoder):
         self.reset()
 
     def reset(self):
-        self.bitlength = None # We will later test how long a bit is.
+        self.samplenum = 0
+        self.frame_start = -1
+        self.frame_end = -1
+        self.state = 'WAIT FOR START'
 
     def start(self):
         self.out_ann = self.register(srd.OUTPUT_ANN)
@@ -78,5 +81,15 @@ class Decoder(srd.Decoder):
     '''
     def decode(self, ss, es, data):
         ptype, rxtx, pdata = data
-        if ptype == 'DATA':
-            print(ss, es, pdata[0])
+        if ptype == 'FRAME':
+            print(ptype, ss, es, pdata)
+            value, valid = pdata
+            if value == 0xdd:
+                self.frame_start = es
+                self.put(ss, es, self.out_ann, [0, ['Start Byte']])
+            if value == 0x77:
+               self.put(ss, es, self.out_ann, [4, ['Stop Byte']])
+               self.frame_end = ss
+               self.put(self.frame_start, self.frame_end, self.out_ann, [2, ['Content']])
+
+
