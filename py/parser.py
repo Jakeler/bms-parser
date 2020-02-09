@@ -1,4 +1,4 @@
-from packet import Packet
+from kai.packet import Packet
 from pprint import pp, pprint
 
 def recurse_vars(obj):

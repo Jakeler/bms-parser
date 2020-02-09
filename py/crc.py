@@ -9,6 +9,7 @@ resp = [
 
 def verify(packet):
     data = packet[2:-3]
+    print(data)
     check = packet[-3:-1]
     crc=0x10000
     for i in data:

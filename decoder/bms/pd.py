@@ -27,7 +27,7 @@ class Decoder(srd.Decoder):
     api_version = 3
     id = 'bms'
     name = 'BMS'
-    longname = 'Battery Managment System'
+    longname = 'Battery Management System'
     desc = 'Chinese de facto standard for smart BMS with uart/bluetooth'
     license = 'gplv3+'
     inputs = ['uart']
@@ -82,7 +82,7 @@ class Decoder(srd.Decoder):
                 elif isinstance(data, packet.Hardware):
                     res += data.version
                 elif isinstance(data, bytes):
-                    res += data.hex(' ')
+                    res += f'{data} ({int.from_bytes(data, byteorder="big")} = 0x{data.hex()})'
             return res
         except Exception as e:
             return f'Failed: {e}'
