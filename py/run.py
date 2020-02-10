@@ -6,7 +6,7 @@ parser = argparse.ArgumentParser(description='Basic BMS readout')
 parser.add_argument('dev', help='Serial Port')
 args = parser.parse_args()
 
-intervall = 1.0
+intervall = 0.5
 
 class Requests:
     basic = b'\xdd\xa5\x03\x00\xff\xfdw'
@@ -26,8 +26,11 @@ def parse(data) -> str:
             data = pkt.body.data
             res = f'Response {pkt.body.status.name}, Type {data.__class__.__name__}: '
             if isinstance(data, packet.BasicInfo):
-                res += f'{data.total.volt} V, {data.current.amp} A, {data.remain_cap_percent} %, '
-                res += f'{data.cell_count} Cells, {data.cycles} Cycles, T {[(str(t.celsius)+" °C") for t in data.temps]}'
+                res += f'{data.total.volt} V, {data.current.amp} A, '
+                res += f'{data.cell_count} Cells, {data.cycles} Cycles, T {[(str(t.celsius)+" °C") for t in data.temps]}\n'
+                res += f"BAL {['B' if c else '-' for c in data.balance_status.flag[:11]]} \n"
+                res += f'{data.remain_cap_percent} %, {data.remain_cap.amp_hour} / {data.typ_cap.amp_hour} Ah\t'
+                res += f'FET: CHG={data.fet_status.charge.name} DIS={data.fet_status.discharge.name}'
             elif isinstance(data, packet.CellVoltages):
                 res += ', '.join([(str(c.volt)+" V") for c in data.cells])
             elif isinstance(data, packet.Hardware):
@@ -47,10 +50,13 @@ while True:
     r, w, e = select.select([fd], [], [], intervall)
     if fd in r:
         data = os.read(fd, 255)
-        print(data)
+        time.sleep(intervall/2)
+
+        # print(data)
         res = parse(data)
+        
         print(res)
-        time.sleep(intervall)
+        time.sleep(intervall/2)
 
 os.close(fd)
 
