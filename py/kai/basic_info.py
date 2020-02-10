@@ -107,7 +107,7 @@ class BasicInfo(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.raw = self._io.read_u2be()
+            self.raw = self._io.read_s2be()
 
         @property
         def amp(self):

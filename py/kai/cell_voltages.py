@@ -38,7 +38,7 @@ class CellVoltages(KaitaiStruct):
             if hasattr(self, '_m_volt'):
                 return self._m_volt if hasattr(self, '_m_volt') else None
 
-            self._m_volt = (self.raw * 0.01)
+            self._m_volt = (self.raw * 0.001)
             return self._m_volt if hasattr(self, '_m_volt') else None
 
 

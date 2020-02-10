@@ -112,7 +112,7 @@ types:
   current:
     seq:
       - id: raw
-        type: u2
+        type: s2
         doc: Actual current (raw)
     instances:
       amp:

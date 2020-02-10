@@ -15,5 +15,5 @@ types:
         doc: Cell voltage (raw)
     instances:
       volt:
-        value: raw * 0.01
+        value: raw * 0.001
         doc: Cell voltage (V)
