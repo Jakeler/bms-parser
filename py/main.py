@@ -20,23 +20,32 @@ def parse(data: bytes) -> str:
     try:
         pkt = Packet.from_bytes(data)
         pktToString(pkt)
+
+        if db:
+            db.insert(pkt)
+
     except Exception as e:
         return f'Failed: {e}'
 
-
-fd = os.open(args.dev, os.O_RDWR)
-while True:
-    os.write(fd, Requests.basic)
+def requestData(req: bytes):
+    os.write(fd, req)
     r, w, e = select.select([fd], [], [], intervall)
     if fd in r:
         data = os.read(fd, 255)
-        time.sleep(intervall/2)
 
         # print(data)
         res = parse(data)
-        
         print(res)
-        time.sleep(intervall/2)
 
-os.close(fd)
+
+if __name__ == "__main__":
+    fd = os.open(args.dev, os.O_RDWR)
+    if args.mongo:
+        db = DB()
+    while True:
+        requestData(Requests.basic)
+        requestData(Requests.cells)
+        time.sleep(intervall)
+
+    os.close(fd)
 
