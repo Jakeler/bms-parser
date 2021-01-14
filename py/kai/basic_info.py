@@ -53,8 +53,9 @@ class BasicInfo(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.charge = self._root.FetBit(self._io.read_bits_int(1))
+            self.reserved = self._io.read_bits_int(6)
             self.discharge = self._root.FetBit(self._io.read_bits_int(1))
+            self.charge = self._root.FetBit(self._io.read_bits_int(1))
 
 
     class ProtList(KaitaiStruct):
@@ -65,19 +66,20 @@ class BasicInfo(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.ovp_cell = self._io.read_bits_int(1) != 0
-            self.uvp_cell = self._io.read_bits_int(1) != 0
-            self.ovp_pack = self._io.read_bits_int(1) != 0
-            self.uvp_pack = self._io.read_bits_int(1) != 0
-            self.otp_charge = self._io.read_bits_int(1) != 0
-            self.utp_charge = self._io.read_bits_int(1) != 0
-            self.otp_discharge = self._io.read_bits_int(1) != 0
-            self.utp_discharge = self._io.read_bits_int(1) != 0
-            self.ocp_charge = self._io.read_bits_int(1) != 0
-            self.ocp_discharge = self._io.read_bits_int(1) != 0
-            self.ocp_short = self._io.read_bits_int(1) != 0
-            self.ic_error = self._io.read_bits_int(1) != 0
+            self.reserved = self._io.read_bits_int(3)
             self.fet_lock = self._io.read_bits_int(1) != 0
+            self.ic_error = self._io.read_bits_int(1) != 0
+            self.ocp_short = self._io.read_bits_int(1) != 0
+            self.ocp_discharge = self._io.read_bits_int(1) != 0
+            self.ocp_charge = self._io.read_bits_int(1) != 0
+            self.utp_discharge = self._io.read_bits_int(1) != 0
+            self.otp_discharge = self._io.read_bits_int(1) != 0
+            self.utp_charge = self._io.read_bits_int(1) != 0
+            self.otp_charge = self._io.read_bits_int(1) != 0
+            self.uvp_pack = self._io.read_bits_int(1) != 0
+            self.ovp_pack = self._io.read_bits_int(1) != 0
+            self.uvp_cell = self._io.read_bits_int(1) != 0
+            self.ovp_cell = self._io.read_bits_int(1) != 0
 
 
     class Temp(KaitaiStruct):
