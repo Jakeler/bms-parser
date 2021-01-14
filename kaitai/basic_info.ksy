@@ -57,38 +57,42 @@ types:
         repeat-expr: 32
   prot_list:
     seq:
-      - id: ovp_cell
-        type: b1
-      - id: uvp_cell
-        type: b1
-      - id: ovp_pack
-        type: b1
-      - id: uvp_pack
-        type: b1
-      - id: otp_charge
-        type: b1
-      - id: utp_charge
-        type: b1
-      - id: otp_discharge
-        type: b1
-      - id: utp_discharge
-        type: b1
-      - id: ocp_charge
-        type: b1
-      - id: ocp_discharge
-        type: b1
-      - id: ocp_short
+      - id: reserved
+        type: b3
+      - id: fet_lock
         type: b1
       - id: ic_error
         type: b1
-      - id: fet_lock
+      - id: ocp_short
+        type: b1
+      - id: ocp_discharge
+        type: b1
+      - id: ocp_charge
+        type: b1
+      - id: utp_discharge
+        type: b1
+      - id: otp_discharge
+        type: b1
+      - id: utp_charge
+        type: b1
+      - id: otp_charge
+        type: b1
+      - id: uvp_pack
+        type: b1
+      - id: ovp_pack
+        type: b1
+      - id: uvp_cell
+        type: b1
+      - id: ovp_cell
         type: b1
   fet_bits:
     seq:
-      - id: charge
+      - id: reserved
+        type: b6
+      - id: discharge
         type: b1
         enum: fet_bit
-      - id: discharge
+      - id: charge
         type: b1
         enum: fet_bit
   voltage:
