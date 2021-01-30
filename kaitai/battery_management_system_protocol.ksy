@@ -30,11 +30,6 @@ seq:
     size: 2
   - id: magic_end
     contents: [0x77]
-  
-enums:
-  status:
-    0x00: ok
-    0x80: fail
 
 types:
   read_req:
@@ -208,6 +203,10 @@ types:
     params:
       - id: cmd
         type: u1
+    enums:
+      status:
+        0x00: ok
+        0x80: fail
     seq:
       - id: status
         type: u1
