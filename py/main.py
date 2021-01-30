@@ -9,7 +9,7 @@ parser.add_argument('-l', '--log', dest='logfile', help='Log to file')
 parser.add_argument('-m', '--mongo', dest='mongo', help='Log to mongodb instance')
 args = parser.parse_args()
 
-intervall = 0.5
+intervall = 1.0
 
 class Requests:
     basic = b'\xdd\xa5\x03\x00\xff\xfdw'
@@ -19,18 +19,21 @@ class Requests:
 def parse(data: bytes) -> str:
     try:
         pkt = Packet.from_bytes(data)
-        pktToString(pkt)
 
-        if db:
+        if args.mongo:
             db.insert(pkt)
+        
+        return pktToString(pkt)
 
     except Exception as e:
         return f'Failed: {e}'
 
 def requestData(req: bytes):
     os.write(fd, req)
+    print('Sending request')
     r, w, e = select.select([fd], [], [], intervall)
     if fd in r:
+        time.sleep(0.1)
         data = os.read(fd, 255)
 
         # print(data)

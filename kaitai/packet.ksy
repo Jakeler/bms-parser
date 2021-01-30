@@ -1,10 +1,10 @@
 meta:
   id: packet
-  endian: be
   imports:
     - basic_info
     - cell_voltages
     - hardware
+  endian: be
 seq:
   - id: magic_start
     contents: [0xdd]
@@ -64,4 +64,3 @@ types:
             0x04: cell_voltages
             0x05: hardware
         size: data_len
-  
