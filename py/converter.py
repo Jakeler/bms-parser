@@ -1,21 +1,21 @@
+from battery_management_system_protocol import BatteryManagementSystemProtocol as bms
 import inspect
 from pprint import pp
-from pymongo import MongoClient
-from pymongo.results import InsertOneResult
-import kai.packet as packet
-from bson.objectid import ObjectId
-
 
 class DB:
     def __init__(self):
+        from pymongo import MongoClient
+        from pymongo.results import InsertOneResult
+        from bson.objectid import ObjectId
+
         self.client = MongoClient('localhost', 27017)
         self.db = self.client['bms']
     
-    def insert(self, pkt: packet.Packet):
+    def insert(self, pkt: bms):
         data = pkt.body.data
-        if isinstance(data, packet.BasicInfo):
+        if isinstance(data, bms.BasicInfo):
             col = 'info'
-        if isinstance(data, packet.CellVoltages):
+        if isinstance(data, bms.CellVoltages):
             col = 'cells'
         
         json = serialize(data)
@@ -52,25 +52,27 @@ def serialize(obj: object) -> dict:
             out[key] = serialize(val)
     return out
 
-def pktToString(pkt: packet.Packet):
+def pktToString(pkt: bms):
     res = f'Packet with {pkt.cmd}'
 
-    if isinstance(pkt.body, packet.Packet.ReadReq):
+    if isinstance(pkt.body, bms.ReadReq):
         res = f'Read request, ID {pkt.body.req_cmd}'
-    elif isinstance(pkt.body, packet.Packet.WriteReq):
+    elif isinstance(pkt.body, bms.WriteReq):
         res = f'Write request, ID {pkt.body.req_cmd}'
-    elif isinstance(pkt.body, packet.Packet.Response):
+    elif isinstance(pkt.body, bms.Response):
         data = pkt.body.data
         res = f'Response {pkt.body.status.name}, Type {data.__class__.__name__}: '
-        if isinstance(data, packet.BasicInfo):
+        if isinstance(data, bms.BasicInfo):
             res += f'{data.total.volt} V, {data.current.amp} A, '
             res += f'{data.cell_count} Cells, {data.cycles} Cycles, T {[(str(t.celsius)+" °C") for t in data.temps]}\n'
             res += f"BAL {['B' if c else '-' for c in data.balance_status.flag[:]]} \n"
             res += f'{data.remain_cap_percent} %, {data.remain_cap.amp_hour} / {data.typ_cap.amp_hour} Ah\t'
             res += f'FET: CHG={data.fet_status.charge.name} DIS={data.fet_status.discharge.name}'
+        elif isinstance(data, bms.CellVoltages):
         elif isinstance(data, packet.CellVoltages):
             res += ', '.join([(str(c.volt)+" V") for c in data.cells])
         elif isinstance(data, packet.Hardware):
+        elif isinstance(data, bms.Hardware):
             res += data.version
         elif isinstance(data, bytes):
             res += f'{data} ({int.from_bytes(data, byteorder="big")} = 0x{data.hex()})'

@@ -1,6 +1,5 @@
 import os, select, time, argparse
-from kai import packet
-from kai.packet import Packet
+from battery_management_system_protocol import BatteryManagementSystemProtocol as BMS
 from converter import DB, pktToString
 
 parser = argparse.ArgumentParser(description='Basic BMS readout')
@@ -18,7 +17,7 @@ class Requests:
 
 def parse(data: bytes) -> str:
     try:
-        pkt = Packet.from_bytes(data)
+        pkt = BMS.from_bytes(data)
 
         if args.mongo:
             db.insert(pkt)
