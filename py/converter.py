@@ -69,9 +69,7 @@ def pktToString(pkt: bms):
             res += f'{data.remain_cap_percent} %, {data.remain_cap.amp_hour} / {data.typ_cap.amp_hour} Ah\t'
             res += f'FET: CHG={data.fet_status.charge.name} DIS={data.fet_status.discharge.name}'
         elif isinstance(data, bms.CellVoltages):
-        elif isinstance(data, packet.CellVoltages):
-            res += ', '.join([(str(c.volt)+" V") for c in data.cells])
-        elif isinstance(data, packet.Hardware):
+            res += ', '.join([(f"{c.volt:.3f} V") for c in data.cells])
         elif isinstance(data, bms.Hardware):
             res += data.version
         elif isinstance(data, bytes):
