@@ -8,13 +8,14 @@ resp = [
     ]
 
 def verify(packet):
+    print()
     data = packet[2:-3]
-    print(data)
     check = packet[-3:-1]
-    crc=0x10000
-    for i in data:
-        crc=crc-int(i)
+    print(f'Payload {data}')
+
+    crc=0x10000 - sum(data)
     crc_b = crc.to_bytes(2, byteorder='big')
+
     print(f'Packet {packet.hex("_")} - CRC: {check.hex()} = {crc_b.hex()} -> {"OK" if check == crc_b else "FAIL"}')
     
 for r in resp:
