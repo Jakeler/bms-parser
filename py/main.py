@@ -4,7 +4,7 @@ from converter import DB, pktToString
 
 parser = argparse.ArgumentParser(description='Basic BMS readout')
 parser.add_argument('dev', help='Serial Port')
-parser.add_argument('-l', '--log', dest='logfile', help='Log to file')
+parser.add_argument('-v', '--verbose', action='store_true', help='Print complete raw data')
 parser.add_argument('-m', '--mongo', dest='mongo', help='Log to mongodb instance')
 args = parser.parse_args()
 
@@ -29,13 +29,20 @@ def parse(data: bytes) -> str:
 
 def requestData(req: bytes):
     os.write(fd, req)
-    print('Sending request')
+
+    if args.verbose:
+        print(f'> Request: {req.hex()}')
+    else:
+        print('Sending request')
+
     r, w, e = select.select([fd], [], [], intervall)
     if fd in r:
         time.sleep(0.1)
         data = os.read(fd, 255)
 
-        # print(data)
+        if args.verbose:
+            print(f'< Response: {data.hex()}')
+
         res = parse(data)
         print(res)
 
