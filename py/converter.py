@@ -1,4 +1,4 @@
-from battery_management_system_protocol import BatteryManagementSystemProtocol as bms
+from parser import BmsPacket as bms
 import inspect
 from pprint import pp
 
@@ -53,15 +53,16 @@ def serialize(obj: object) -> dict:
     return out
 
 def pktToString(pkt: bms):
-    res = f'Packet with {pkt.cmd}'
+    state = 'Valid' if pkt.is_checksum_valid else 'INVALID!'
+    res = f'{state} packet with command code {pkt.cmd}\n'
 
     if isinstance(pkt.body, bms.ReadReq):
-        res = f'Read request, ID {pkt.body.req_cmd}'
+        res += f'Read request, ID {pkt.body.req_cmd}'
     elif isinstance(pkt.body, bms.WriteReq):
-        res = f'Write request, ID {pkt.body.req_cmd}'
+        res += f'Write request, ID {pkt.body.req_cmd}'
     elif isinstance(pkt.body, bms.Response):
         data = pkt.body.data
-        res = f'Response {pkt.body.status.name}, Type {data.__class__.__name__}: '
+        res += f'Response {pkt.body.status.name}, Type {data.__class__.__name__}: '
         if isinstance(data, bms.BasicInfo):
             res += f'{data.total.volt} V, {data.current.amp} A, '
             res += f'{data.cell_count} Cells, {data.cycles} Cycles, T {[(str(t.celsius)+" °C") for t in data.temps]}\n'
