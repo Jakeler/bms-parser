@@ -2,8 +2,9 @@ meta:
   id: battery_management_system_protocol
   title: Communication protocol of smart battery management systems from LLT power
   license: CC0-1.0
-  ks-version: 0.8
+  ks-version: 0.9
   endian: be
+  bit-endian: be
 
 doc: |
   Many modern general purpose BMS include a UART/Bluetooth based communication interface.
@@ -17,19 +18,44 @@ seq:
     contents: [0xdd]
   - id: cmd
     type: u1
+    -affected-by: 778
 
+  - size: 0
+    if: ofs_body_start < 0 # storing current position
   - id: body
     type:
       switch-on: cmd
       cases:
-        0xa5: read_req
-        0x5a: write_req
+        commands::read.to_i: read_req
+        commands::write.to_i: write_req
         _: response(cmd)
-  
+  - size: 0
+    if: ofs_body_end < 0 # storing current position
+
   - id: checksum
-    size: 2
+    type: u2
+    doc: |
+      Should be equal to the result from: 0x10000 - sum(body)
+      Where sum() is calculated over the value of every byte individually.
+      Body includes everything besides magic start/end byte, cmd and checksum,
+      so excluding 2 bytes at the beginning and 3 bytes at the end.
   - id: magic_end
     contents: [0x77]
+
+instances:
+  ofs_body_start:
+    value: _io.pos
+  ofs_body_end:
+    value: _io.pos
+  checksum_input:
+    -affected-by: 84
+    pos: ofs_body_start
+    size: ofs_body_end - ofs_body_start
+
+enums:
+  commands:
+    0xa5: read
+    0x5a: write
 
 types:
   read_req:
@@ -70,7 +96,6 @@ types:
         doc: List of balance bits
       - id: prot_status
         type: prot_list
-        size: 2
         doc: List of protection bits
       - id: software_version
         type: u1
@@ -79,7 +104,6 @@ types:
         doc: Portion of remaining capacity
       - id: fet_status
         type: fet_bits
-        size: 1
       - id: cell_count
         type: u1
       - id: ntc_count
@@ -89,14 +113,10 @@ types:
         size: 2
         repeat: expr
         repeat-expr: ntc_count
-    enums:
-      fet_bit:
-        0: off
-        1: on
     types:
       balance_list:
         seq:
-          - id: flag
+          - id: is_balancing
             type: b1
             repeat: expr
             repeat-expr: 32
@@ -104,43 +124,42 @@ types:
         seq:
           - id: reserved
             type: b3
-          - id: fet_lock
+          - id: is_fet_lock
             type: b1
-          - id: ic_error
+          - id: is_ic_error
             type: b1
-          - id: ocp_short
+          - id: is_ocp_short
             type: b1
-          - id: ocp_discharge
+          - id: is_ocp_discharge
             type: b1
-          - id: ocp_charge
+          - id: is_ocp_charge
             type: b1
-          - id: utp_discharge
+          - id: is_utp_discharge
             type: b1
-          - id: otp_discharge
+          - id: is_otp_discharge
             type: b1
-          - id: utp_charge
+          - id: is_utp_charge
             type: b1
-          - id: otp_charge
+          - id: is_otp_charge
             type: b1
-          - id: uvp_pack
+          - id: is_uvp_pack
             type: b1
-          - id: ovp_pack
+          - id: is_ovp_pack
             type: b1
-          - id: uvp_cell
+          - id: is_uvp_cell
             type: b1
-          - id: ovp_cell
+          - id: is_ovp_cell
             type: b1
       fet_bits:
         seq:
           - id: reserved
             type: b6
-          - id: discharge
+          - id: is_discharge_enabled
             type: b1
-            enum: fet_bit
-          - id: charge
+          - id: is_charge_enabled
             type: b1
-            enum: fet_bit
       voltage:
+        -affected-by: 522
         seq:
           - id: raw
             type: u2
@@ -150,6 +169,7 @@ types:
             value: raw * 0.01
             doc: Pack voltage (V)
       capacity:
+        -affected-by: 522
         seq:
           - id: raw
             type: u2
@@ -159,6 +179,7 @@ types:
             value: raw * 0.01
             doc: Capacity (Ah)
       current:
+        -affected-by: 522
         seq:
           - id: raw
             type: s2
@@ -168,6 +189,7 @@ types:
             value: raw * 0.01
             doc: Actual current (A)
       temp:
+        -affected-by: 522
         seq:
           - id: raw
             type: u2
@@ -182,6 +204,7 @@ types:
         repeat: eos
     types:
       voltage:
+        -affected-by: 522
         seq:
           - id: raw
             type: u2
