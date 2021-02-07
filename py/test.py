@@ -1,41 +1,105 @@
 from parser import BmsPacket
 from pprint import pp
 from converter import serialize, pktToString
+import unittest
 
-# db = DB()
+class TestBasicInfo(unittest.TestCase):
 
-# Basic Info
-# d = BmsPacket.from_bytes(b"\xdd\x03\x00\x1b\x118\x00b\x00\xa4\x04\xb0\x00\x00'n\x02\x82\x00\x00" + b'\x00\x00!\x0e\x03\x0b\x02\x0b"\x0b\x10\xfcBw')
-d = BmsPacket.from_bytes(bytes.fromhex('dd 03 00 1b 10 3c fe 0e 02 d7 04 b0 00 00 27 6e 00 00 00 00 00 00 21 3d 03 0b 02 0b 37 0b 47 fb 69 77'))
-# pp(serialize(d))
-# db.insert(d)
-print(pktToString(d), '\n')
+    def test_valid_pkt(self):
+        incoming = 'dd03001b1138006200a404b00000276e028200000000210e030b020b220b10fc4277'
+        pkt = BmsPacket.from_bytes(bytes.fromhex(incoming))
+        print(pktToString(pkt), '\n')
 
-# Cells
-d2 = BmsPacket.from_bytes(b'\xdd\x04\x00\x16\x0f\xa7\x0f\xa5\x0f\xa1\x0f\x98\x0f\x9e\x0f\xa0\x0f\xb1\x0f\xbb' + b'\x0f\xb1\x0f\xa6\x0f\xa7\xf8\x18w',)
-# pp(serialize(d2))
-# db.insert(d2)
-cells = [c.volt for c in d2.body.data.cells]
-print(pktToString(d2), f'= SUM: {sum(cells)} V', '\n')
+        self.assertTrue(pkt.is_checksum_valid)
+        self.assertEqual(pkt.cmd, 3)
+        self.assertIsInstance(pkt.body.data, BmsPacket.BasicInfo)
+        self.assertEqual(pkt.body.data.total.volt, 44.08)
+        self.assertEqual(pkt.body.data.current.amp, 0.98)
+        self.assertAlmostEqual(pkt.body.data.temps[0].celsius, 11.9)
+        self.assertAlmostEqual(pkt.body.data.temps[1].celsius, 10.1)
+        self.assertAlmostEqual(pkt.body.data.remain_cap.amp_hour, 1.64)
+        self.assertEqual(pkt.body.data.balance_status.is_balancing, 
+            [0,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+        self.assertEqual(pkt.body.data.fet_status.is_charge_enabled, True)
+        self.assertEqual(pkt.body.data.fet_status.is_discharge_enabled, True)
 
-# HW
-d2 = BmsPacket.from_bytes(b'\xdd\x05\x00\x11SP15S001-P13S-30' + b'A\xfb\xfdw')
-# pp(serialize(d2))
-print(pktToString(d2), '\n')
+    def test_valid_pkt_discharge(self):
+        incoming = 'dd03001b103cfe0e02d704b00000276e000000000000213d030b020b370b47fb6977'
+        pkt = BmsPacket.from_bytes(bytes.fromhex(incoming))
+        print(pktToString(pkt), '\n')
 
-# Settings
-d2 = BmsPacket.from_bytes(b'\xdd\x10\x00\x02\x07\xd0\xff\x27\x77')
-# pp(serialize(d2))
-# pp(vars(d2.body))
-print(pktToString(d2), '\n')
+        self.assertTrue(pkt.is_checksum_valid)
+        self.assertEqual(pkt.cmd, 3)
+        self.assertIsInstance(pkt.body.data, BmsPacket.BasicInfo)
+        self.assertEqual(pkt.body.data.current.amp, -4.98)
 
-# Request
-d2 = BmsPacket.from_bytes(b'\xdd\xa5\x05\x00\xff\xfbw')
-# pp(isinstance(d2.body, BmsPacket.ReadReq))
-pp(serialize(d2))
+    def test_wrong_checksum(self):
+        incoming = 'dd03001b103cfe0e02d704b00000276e000000100000213d030b020b370b47fb6977'
+        pkt = BmsPacket.from_bytes(bytes.fromhex(incoming))
+        print(pktToString(pkt), '\n')
 
-# Write
-d2 = BmsPacket.from_bytes(b'\xDD\x5A\x10\x02\x4E\x20\xFF\x80\x77')
-pp(serialize(d2))
-# pp(isinstance(d2.body, BmsPacket.WriteReq))
+        self.assertFalse(pkt.is_checksum_valid)
 
+class TestCells(unittest.TestCase):
+
+    def test_valid_pkt(self):
+        incoming = 'dd0400160fa70fa50fa10f980f9e0fa00fb10fbb0fb10fa60fa7f81877'
+        pkt = BmsPacket.from_bytes(bytes.fromhex(incoming))
+        cells = [c.volt for c in pkt.body.data.cells]
+        print(pktToString(pkt), f'= SUM: {sum(cells):.2f} V', '\n')
+
+        self.assertTrue(pkt.is_checksum_valid)
+        self.assertEqual(pkt.cmd, 4)
+        self.assertIsInstance(pkt.body.data, BmsPacket.CellVoltages)
+        self.assertEqual(cells, [4.007, 4.005, 4.001, 3.992, 3.998, 4.000, 4.017, 4.027, 4.017, 4.006, 4.007])
+
+class TestHardware(unittest.TestCase):
+
+    def test_valid_pkt(self):
+        incoming = 'dd05001153503135533030312d503133532d333041fbfd77'
+        pkt = BmsPacket.from_bytes(bytes.fromhex(incoming))
+        print(pktToString(pkt), '\n')
+
+        self.assertTrue(pkt.is_checksum_valid)
+        self.assertEqual(pkt.cmd, 5)
+        self.assertIsInstance(pkt.body.data, BmsPacket.Hardware)
+        self.assertEqual(pkt.body.data.version, 'SP15S001-P13S-30A')
+
+class TestOtherSettings(unittest.TestCase):
+
+    def test_cmd16(self):
+        incoming = 'dd10000207d0ff2777'
+        pkt = BmsPacket.from_bytes(bytes.fromhex(incoming))
+        print(pktToString(pkt), '\n')
+
+        self.assertTrue(pkt.is_checksum_valid)
+        self.assertEqual(pkt.cmd, 16)
+        self.assertIsInstance(pkt.body, BmsPacket.Response)
+        self.assertEqual(pkt.body.data, bytes.fromhex('07d0'))
+
+class TestRequests(unittest.TestCase):
+
+    def test_read(self):
+        incoming = 'dda50500fffb77'
+        pkt = BmsPacket.from_bytes(bytes.fromhex(incoming))
+        print(pktToString(pkt), '\n')
+
+        self.assertTrue(pkt.is_checksum_valid)
+        self.assertEqual(pkt.body.req_cmd, 5)
+        self.assertIsInstance(pkt.body, BmsPacket.ReadReq)
+        self.assertEqual(pkt.body.data_len, bytes.fromhex('00'))
+
+    def test_write(self):
+        incoming = 'dd5a10024e20ff8077'
+        pkt = BmsPacket.from_bytes(bytes.fromhex(incoming))
+        print(pktToString(pkt), '\n')
+
+        self.assertTrue(pkt.is_checksum_valid)
+        self.assertEqual(pkt.body.req_cmd, 16)
+        self.assertIsInstance(pkt.body, BmsPacket.WriteReq)
+        self.assertEqual(pkt.body.data_len, 2)
+        self.assertEqual(pkt.body.write_data, bytes.fromhex('4e20'))
+
+
+if __name__ == '__main__':
+    unittest.main()
