@@ -65,9 +65,9 @@ def pktToString(pkt: bms):
         if isinstance(data, bms.BasicInfo):
             res += f'{data.total.volt} V, {data.current.amp} A, '
             res += f'{data.cell_count} Cells, {data.cycles} Cycles, T {[(str(t.celsius)+" °C") for t in data.temps]}\n'
-            res += f"BAL {['B' if c else '-' for c in data.balance_status.flag[:]]} \n"
+            res += f"BAL {['B' if c else '-' for c in data.balance_status.is_balancing[:]]} \n"
             res += f'{data.remain_cap_percent} %, {data.remain_cap.amp_hour} / {data.typ_cap.amp_hour} Ah\t'
-            res += f'FET: CHG={data.fet_status.charge.name} DIS={data.fet_status.discharge.name}'
+            res += f'FET: CHG={data.fet_status.is_charge_enabled} DIS={data.fet_status.is_discharge_enabled}'
         elif isinstance(data, bms.CellVoltages):
             res += ', '.join([(f"{c.volt:.3f} V") for c in data.cells])
         elif isinstance(data, bms.Hardware):

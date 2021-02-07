@@ -1,3 +1,6 @@
+from battery_management_system_protocol import BatteryManagementSystemProtocol as bms
+# from converter import pktToString
+
 resp = [
         b'\xdd\xa5\x04\x00\xff\xfcw',
         b'\xdd\x04\x00\x16\x0f\xa7\x0f\xa5\x0f\xa1\x0f\x98\x0f\x9e\x0f\xa0\x0f\xb1\x0f\xbb' + b'\x0f\xb1\x0f\xa6\x0f\xa7\xf8\x18w',
@@ -8,15 +11,17 @@ resp = [
     ]
 
 def verify(packet):
+    pkg = bms.from_bytes(packet)
+    data =  pkg.checksum_input
+    check = pkg.checksum
+
     print()
-    data = packet[2:-3]
-    check = packet[-3:-1]
-    print(f'Payload {data}')
+    # print(pktToString(pkg))
 
     crc=0x10000 - sum(data)
-    crc_b = crc.to_bytes(2, byteorder='big')
 
-    print(f'Packet {packet.hex("_")} - CRC: {check.hex()} = {crc_b.hex()} -> {"OK" if check == crc_b else "FAIL"}')
-    
+    print(f'Packet {packet.hex("_")} - CRC: {check} = {crc} -> {"OK" if check == crc else "FAIL"}')
+    print('Checksum bytes:', crc.to_bytes(2, byteorder='big'))
+
 for r in resp:
     verify(r)
