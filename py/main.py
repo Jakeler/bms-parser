@@ -1,5 +1,6 @@
 import os, select, time, argparse
 from parser import BmsPacket
+from kaitaistruct import KaitaiStructError
 from converter import DB, pktToString
 
 parser = argparse.ArgumentParser(description='Basic BMS readout')
@@ -24,7 +25,8 @@ def parse(data: bytes) -> str:
         
         return pktToString(pkt)
 
-    except Exception as e:
+    # kaitai uses BaseException, which is not included in Exception...
+    except (Exception, KaitaiStructError) as e:
         return f'Failed: {e}'
 
 def requestData(req: bytes):
