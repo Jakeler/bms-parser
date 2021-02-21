@@ -1,4 +1,5 @@
 from parser import BmsPacket
+import kaitaistruct
 from pprint import pp
 from converter import serialize, pktToString
 import unittest
@@ -39,6 +40,21 @@ class TestBasicInfo(unittest.TestCase):
         print(pktToString(pkt), '\n')
 
         self.assertFalse(pkt.is_checksum_valid)
+
+    def test_malformed_short(self):
+        # 0x1b = 27 byte data length, add only 16 for a typical half packet
+        incoming = 'dd03001b' + '00'*16
+        with self.assertRaises(EOFError):
+            pkt = BmsPacket.from_bytes(bytes.fromhex(incoming))
+            print(pktToString(pkt), '\n')
+
+
+    def test_wrong_start(self):
+        # end bytes, happens after a half packet go already consumed
+        incoming = '100000213d030b020b370b47fb6977'
+        with self.assertRaises(kaitaistruct.ValidationNotEqualError):
+            pkt = BmsPacket.from_bytes(bytes.fromhex(incoming))
+            print(pktToString(pkt), '\n')
 
 class TestCells(unittest.TestCase):
 
