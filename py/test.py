@@ -14,8 +14,8 @@ class TestBasicInfo(unittest.TestCase):
         self.assertTrue(pkt.is_checksum_valid)
         self.assertEqual(pkt.cmd, 3)
         self.assertIsInstance(pkt.body.data, BmsPacket.BasicInfo)
-        self.assertEqual(pkt.body.data.total.volt, 44.08)
-        self.assertEqual(pkt.body.data.current.amp, 0.98)
+        self.assertEqual(pkt.body.data.pack_voltage.volt, 44.08)
+        self.assertEqual(pkt.body.data.pack_current.amp, 0.98)
         self.assertAlmostEqual(pkt.body.data.temps[0].celsius, 11.9)
         self.assertAlmostEqual(pkt.body.data.temps[1].celsius, 10.1)
         self.assertAlmostEqual(pkt.body.data.remain_cap.amp_hour, 1.64)
@@ -32,7 +32,7 @@ class TestBasicInfo(unittest.TestCase):
         self.assertTrue(pkt.is_checksum_valid)
         self.assertEqual(pkt.cmd, 3)
         self.assertIsInstance(pkt.body.data, BmsPacket.BasicInfo)
-        self.assertEqual(pkt.body.data.current.amp, -4.98)
+        self.assertEqual(pkt.body.data.pack_current.amp, -4.98)
 
     def test_wrong_checksum(self):
         incoming = 'dd03001b103cfe0e02d704b00000276e000000100000213d030b020b370b47fb6977'
@@ -103,7 +103,7 @@ class TestRequests(unittest.TestCase):
         self.assertTrue(pkt.is_checksum_valid)
         self.assertEqual(pkt.body.req_cmd, 5)
         self.assertIsInstance(pkt.body, BmsPacket.ReadReq)
-        self.assertEqual(pkt.body.data_len, bytes.fromhex('00'))
+        self.assertEqual(pkt.body.len_data, bytes.fromhex('00'))
 
     def test_write(self):
         incoming = 'dd5a10024e20ff8077'
@@ -113,7 +113,7 @@ class TestRequests(unittest.TestCase):
         self.assertTrue(pkt.is_checksum_valid)
         self.assertEqual(pkt.body.req_cmd, 16)
         self.assertIsInstance(pkt.body, BmsPacket.WriteReq)
-        self.assertEqual(pkt.body.data_len, 2)
+        self.assertEqual(pkt.body.len_write_data, 2)
         self.assertEqual(pkt.body.write_data, bytes.fromhex('4e20'))
 
 

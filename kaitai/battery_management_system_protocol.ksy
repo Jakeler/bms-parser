@@ -36,7 +36,8 @@ seq:
     type: u2
     doc: |
       Should be equal to the result from: 0x10000 - sum(body)
-      Where sum() is calculated over the value of every byte individually.
+      Where sum() is calculated over the value of every byte individually. This works
+      for up to 256 bytes, for more it must be clamped to 16 bits: result & 0xffff
       Body includes everything besides magic start/end byte, cmd and checksum,
       so excluding 2 bytes at the beginning and 3 bytes at the end.
   - id: magic_end
@@ -56,6 +57,10 @@ enums:
   commands:
     0xa5: read
     0x5a: write
+  registers:
+    0x03: basic_info
+    0x04: cell_voltages
+    0x05: hardware
 
 types:
   read_req:
@@ -63,23 +68,23 @@ types:
       - id: req_cmd
         type: u1
         doc: Same value as cmd for response
-      - id: data_len
+      - id: len_data
         contents: [0x00]
   write_req:
     seq:
       - id: req_cmd
         type: u1
         doc: Same value as cmd for response
-      - id: data_len
+      - id: len_write_data
         type: u1
       - id: write_data
-        size: data_len
+        size: len_write_data
 
   basic_info:
     seq:
-      - id: total
+      - id: pack_voltage
         type: voltage
-      - id: current
+      - id: pack_current
         type: current
       - id: remain_cap
         type: capacity
@@ -89,7 +94,7 @@ types:
         type: u2
         doc: Cycle times
       - id: prod_date
-        type: u2
+        type: date
         doc: Production date
       - id: balance_status
         type: balance_list
@@ -106,13 +111,13 @@ types:
         type: fet_bits
       - id: cell_count
         type: u1
-      - id: ntc_count
+      - id: num_temps
         type: u1
       - id: temps
         type: temp
         size: 2
         repeat: expr
-        repeat-expr: ntc_count
+        repeat-expr: num_temps
     types:
       balance_list:
         seq:
@@ -188,6 +193,24 @@ types:
           amp:
             value: raw * 0.01
             doc: Actual current (A)
+      date:
+        seq:
+          - id: year_after_2000
+            type: b7
+          - id: month
+            type: b4
+            valid: 
+              min: 1
+              max: 12
+          - id: day
+            type: b5
+            valid: 
+              min: 1
+              max: 31
+        instances:
+          year:
+            value: 2000 + year_after_2000
+            doc: only years from 2000 to 2127 (2000 + 127) can be represented
       temp:
         -affected-by: 522
         seq:
@@ -234,13 +257,13 @@ types:
       - id: status
         type: u1
         enum: status
-      - id: data_len
+      - id: len_data
         type: u1
       - id: data
         type:
           switch-on: cmd
           cases:
-            0x03: basic_info
-            0x04: cell_voltages
-            0x05: hardware
-        size: data_len
+            registers::basic_info.to_i: basic_info
+            registers::cell_voltages.to_i: cell_voltages
+            registers::hardware.to_i: hardware
+        size: len_data

@@ -21,6 +21,11 @@ class BatteryManagementSystemProtocol(KaitaiStruct):
     class Commands(Enum):
         write = 90
         read = 165
+
+    class Registers(Enum):
+        basic_info = 3
+        cell_voltages = 4
+        hardware = 5
     def __init__(self, _io, _parent=None, _root=None):
         self._io = _io
         self._parent = _parent
@@ -95,9 +100,9 @@ class BatteryManagementSystemProtocol(KaitaiStruct):
 
         def _read(self):
             self.req_cmd = self._io.read_u1()
-            self.data_len = self._io.read_bytes(1)
-            if not self.data_len == b"\x00":
-                raise kaitaistruct.ValidationNotEqualError(b"\x00", self.data_len, self._io, u"/types/read_req/seq/1")
+            self.len_data = self._io.read_bytes(1)
+            if not self.len_data == b"\x00":
+                raise kaitaistruct.ValidationNotEqualError(b"\x00", self.len_data, self._io, u"/types/read_req/seq/1")
 
 
     class Hardware(KaitaiStruct):
@@ -125,22 +130,22 @@ class BatteryManagementSystemProtocol(KaitaiStruct):
 
         def _read(self):
             self.status = KaitaiStream.resolve_enum(BatteryManagementSystemProtocol.Response.Status, self._io.read_u1())
-            self.data_len = self._io.read_u1()
+            self.len_data = self._io.read_u1()
             _on = self.cmd
-            if _on == 3:
-                self._raw_data = self._io.read_bytes(self.data_len)
+            if _on == BatteryManagementSystemProtocol.Registers.basic_info.value:
+                self._raw_data = self._io.read_bytes(self.len_data)
                 _io__raw_data = KaitaiStream(BytesIO(self._raw_data))
                 self.data = BatteryManagementSystemProtocol.BasicInfo(_io__raw_data, self, self._root)
-            elif _on == 4:
-                self._raw_data = self._io.read_bytes(self.data_len)
+            elif _on == BatteryManagementSystemProtocol.Registers.cell_voltages.value:
+                self._raw_data = self._io.read_bytes(self.len_data)
                 _io__raw_data = KaitaiStream(BytesIO(self._raw_data))
                 self.data = BatteryManagementSystemProtocol.CellVoltages(_io__raw_data, self, self._root)
-            elif _on == 5:
-                self._raw_data = self._io.read_bytes(self.data_len)
+            elif _on == BatteryManagementSystemProtocol.Registers.hardware.value:
+                self._raw_data = self._io.read_bytes(self.len_data)
                 _io__raw_data = KaitaiStream(BytesIO(self._raw_data))
                 self.data = BatteryManagementSystemProtocol.Hardware(_io__raw_data, self, self._root)
             else:
-                self.data = self._io.read_bytes(self.data_len)
+                self.data = self._io.read_bytes(self.len_data)
 
 
     class BasicInfo(KaitaiStruct):
@@ -151,22 +156,22 @@ class BatteryManagementSystemProtocol(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.total = BatteryManagementSystemProtocol.BasicInfo.Voltage(self._io, self, self._root)
-            self.current = BatteryManagementSystemProtocol.BasicInfo.Current(self._io, self, self._root)
+            self.pack_voltage = BatteryManagementSystemProtocol.BasicInfo.Voltage(self._io, self, self._root)
+            self.pack_current = BatteryManagementSystemProtocol.BasicInfo.Current(self._io, self, self._root)
             self.remain_cap = BatteryManagementSystemProtocol.BasicInfo.Capacity(self._io, self, self._root)
             self.typ_cap = BatteryManagementSystemProtocol.BasicInfo.Capacity(self._io, self, self._root)
             self.cycles = self._io.read_u2be()
-            self.prod_date = self._io.read_u2be()
+            self.prod_date = BatteryManagementSystemProtocol.BasicInfo.Date(self._io, self, self._root)
             self.balance_status = BatteryManagementSystemProtocol.BasicInfo.BalanceList(self._io, self, self._root)
             self.prot_status = BatteryManagementSystemProtocol.BasicInfo.ProtList(self._io, self, self._root)
             self.software_version = self._io.read_u1()
             self.remain_cap_percent = self._io.read_u1()
             self.fet_status = BatteryManagementSystemProtocol.BasicInfo.FetBits(self._io, self, self._root)
             self.cell_count = self._io.read_u1()
-            self.ntc_count = self._io.read_u1()
-            self._raw_temps = [None] * (self.ntc_count)
-            self.temps = [None] * (self.ntc_count)
-            for i in range(self.ntc_count):
+            self.num_temps = self._io.read_u1()
+            self._raw_temps = [None] * (self.num_temps)
+            self.temps = [None] * (self.num_temps)
+            for i in range(self.num_temps):
                 self._raw_temps[i] = self._io.read_bytes(2)
                 _io__raw_temps = KaitaiStream(BytesIO(self._raw_temps[i]))
                 self.temps[i] = BatteryManagementSystemProtocol.BasicInfo.Temp(_io__raw_temps, self, self._root)
@@ -207,6 +212,36 @@ class BatteryManagementSystemProtocol(KaitaiStruct):
                 self.is_ovp_pack = self._io.read_bits_int_be(1) != 0
                 self.is_uvp_cell = self._io.read_bits_int_be(1) != 0
                 self.is_ovp_cell = self._io.read_bits_int_be(1) != 0
+
+
+        class Date(KaitaiStruct):
+            def __init__(self, _io, _parent=None, _root=None):
+                self._io = _io
+                self._parent = _parent
+                self._root = _root if _root else self
+                self._read()
+
+            def _read(self):
+                self.year_after_2000 = self._io.read_bits_int_be(7)
+                self.month = self._io.read_bits_int_be(4)
+                if not self.month >= 1:
+                    raise kaitaistruct.ValidationLessThanError(1, self.month, self._io, u"/types/basic_info/types/date/seq/1")
+                if not self.month <= 12:
+                    raise kaitaistruct.ValidationGreaterThanError(12, self.month, self._io, u"/types/basic_info/types/date/seq/1")
+                self.day = self._io.read_bits_int_be(5)
+                if not self.day >= 1:
+                    raise kaitaistruct.ValidationLessThanError(1, self.day, self._io, u"/types/basic_info/types/date/seq/2")
+                if not self.day <= 31:
+                    raise kaitaistruct.ValidationGreaterThanError(31, self.day, self._io, u"/types/basic_info/types/date/seq/2")
+
+            @property
+            def year(self):
+                """only years from 2000 to 2127 (2000 + 127) can be represented."""
+                if hasattr(self, '_m_year'):
+                    return self._m_year if hasattr(self, '_m_year') else None
+
+                self._m_year = (2000 + self.year_after_2000)
+                return self._m_year if hasattr(self, '_m_year') else None
 
 
         class Temp(KaitaiStruct):
@@ -312,8 +347,8 @@ class BatteryManagementSystemProtocol(KaitaiStruct):
 
         def _read(self):
             self.req_cmd = self._io.read_u1()
-            self.data_len = self._io.read_u1()
-            self.write_data = self._io.read_bytes(self.data_len)
+            self.len_write_data = self._io.read_u1()
+            self.write_data = self._io.read_bytes(self.len_write_data)
 
 
     @property
