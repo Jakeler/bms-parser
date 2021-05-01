@@ -1,6 +1,5 @@
 from parser import BmsPacket as bms
 import inspect
-from pprint import pp
 
 class DB:
     def __init__(self):
@@ -64,7 +63,7 @@ def pktToString(pkt: bms):
         data = pkt.body.data
         res += f'Response {pkt.body.status.name}, Type {data.__class__.__name__}: '
         if isinstance(data, bms.BasicInfo):
-            res += f'{data.total.volt} V, {data.current.amp} A, '
+            res += f'{data.pack_voltage.volt} V, {data.pack_current.amp} A, '
             res += f'{data.cell_count} Cells, {data.cycles} Cycles, T {[(str(t.celsius)+" °C") for t in data.temps]}\n'
             res += f"BAL {['B' if c else '-' for c in data.balance_status.is_balancing[:]]} \n"
             res += f'{data.remain_cap_percent} %, {data.remain_cap.amp_hour} / {data.typ_cap.amp_hour} Ah\t'
