@@ -5,9 +5,15 @@ from rich.progress import Progress, BarColumn
 from rich.panel import Panel
 from rich.live import Live
 
+from py.tui.data import get_cells
+
 MIN_VOLT = 3.5
 MAX_VOLT = 4.2
 _RANGE_VOLT = MAX_VOLT - MIN_VOLT
+
+data = get_cells()
+cell_count = len(data)
+# print(data)
 
 class Flags:
     high = '[on dark_green] :arrow_heading_up: '
@@ -21,11 +27,6 @@ class Flags:
         flags = Flags.low if is_min else flags
         return flags
 
-# from data import get_cells
-# data = get_cells()
-cell_count = 12
-data = [3.2+random.random() for _ in range(cell_count)]
-# print(data)
 
 progress = Progress(
     "[progress.description]{task.description}",
@@ -36,7 +37,7 @@ progress = Progress(
 )
 tasks = list(
     progress.add_task('pending', total=_RANGE_VOLT, delta='none', flags=' - ')
-    for c in data
+    for _ in range(cell_count)
 )
 
 layout = Layout()
@@ -52,7 +53,8 @@ layout['info'].update(info_panel)
 
 with Live(layout, refresh_per_second=5):
     while True:
-        data = [3.6+random.random()/10 for _ in range(cell_count)]
+        # data = [3.6+random.random()/10 for _ in range(cell_count)]
+        data = get_cells()
         avg = sum(data)/len(data)
         low = min(data)
         high = max(data)

@@ -1,4 +1,4 @@
-from parser import BmsPacket
+from py.parser import BmsPacket
 
 def get_cells():
     incoming = 'dd0400160fa70fa50fa10f980f9e0fa00fb10fbb0fb10fa60fa7f81877'
