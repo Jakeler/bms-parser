@@ -10,11 +10,13 @@ MAX_VOLT = 4.2
 _RANGE_VOLT = MAX_VOLT - MIN_VOLT
 
 class Flags:
-    high = '[on green] :arrow_heading_up: '
-    low = '[on red] :arrow_heading_down: '
+    high = '[on dark_green] :arrow_heading_up: '
+    low = '[on dark_red] :arrow_heading_down: '
+    balancing = ' :yin_yang: '
+    placeholder = '   '
 
-    def generate(is_max: bool, is_min: bool):
-        flags = '   '
+    def gen(is_max: bool, is_min: bool):
+        flags = Flags.placeholder
         flags = Flags.high if is_max else flags
         flags = Flags.low if is_min else flags
         return flags
@@ -29,8 +31,8 @@ progress = Progress(
     "[progress.description]{task.description}",
     "[progress.percentage]{task.percentage:>3.0f}%",
     BarColumn(),
-    "{task.fields[flags]}",
     "{task.fields[delta]}"
+    "{task.fields[flags]}",
 )
 tasks = list(
     progress.add_task('pending', total=_RANGE_VOLT, delta='none', flags=' - ')
@@ -59,7 +61,7 @@ with Live(layout, refresh_per_second=100):
             progress.update(i, 
                 completed=val-MIN_VOLT, 
                 description=f"{val:.2f} V", 
-                delta=f'{(val-avg)*1000: 3.0f} mV',
-                flags=Flags.generate(val == high, val == low)
+                delta=f'{Flags.gen(val == high, val == low)}{(val-avg)*1000: 04.0f} mV',
+                flags=Flags.balancing if random.random() > 0.5 else Flags.placeholder
             )
         time.sleep(1.0)
