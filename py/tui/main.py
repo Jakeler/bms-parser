@@ -5,7 +5,7 @@ from rich.progress import Progress, BarColumn
 from rich.panel import Panel
 from rich.live import Live
 
-MIN_VOLT = 3.2
+MIN_VOLT = 3.5
 MAX_VOLT = 4.2
 _RANGE_VOLT = MAX_VOLT - MIN_VOLT
 
@@ -31,7 +31,7 @@ progress = Progress(
     "[progress.description]{task.description}",
     "[progress.percentage]{task.percentage:>3.0f}%",
     BarColumn(),
-    "{task.fields[delta]}"
+    "{task.fields[delta]}",
     "{task.fields[flags]}",
 )
 tasks = list(
@@ -50,9 +50,9 @@ layout['cells'].update(cell_panel)
 info_panel = Panel('TODO', title='Basic Info')
 layout['info'].update(info_panel)
 
-with Live(layout, refresh_per_second=100):
+with Live(layout, refresh_per_second=5):
     while True:
-        data = [3.2+random.random() for _ in range(cell_count)]
+        data = [3.6+random.random()/10 for _ in range(cell_count)]
         avg = sum(data)/len(data)
         low = min(data)
         high = max(data)
@@ -64,4 +64,4 @@ with Live(layout, refresh_per_second=100):
                 delta=f'{Flags.gen(val == high, val == low)}{(val-avg)*1000: 04.0f} mV',
                 flags=Flags.balancing if random.random() > 0.5 else Flags.placeholder
             )
-        time.sleep(1.0)
+        time.sleep(0.5)
