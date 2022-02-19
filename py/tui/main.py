@@ -1,11 +1,14 @@
 import time, random
 from rich import print
+from rich import box
 from rich.layout import Layout
+from rich.padding import Padding
 from rich.progress import Progress, BarColumn
 from rich.panel import Panel
+from rich.table import Table
 from rich.live import Live
 
-from py.tui.data import get_cells
+from py.tui.data import get_cells, get_info
 
 MIN_VOLT = 3.5
 MAX_VOLT = 4.2
@@ -37,6 +40,19 @@ def setup_cells(cell_count: int):
     )
     return (progress, tasks)
 
+def setup_info(info: list):
+    table = Table(title='Basic Info', box=box.HORIZONTALS, show_lines=True)
+
+    table.add_column('Title')
+    table.add_column('Value')
+    table.add_column('Unit')
+
+    for line in info:
+        table.add_row(*line)
+
+    return table
+
+
 def setup_window(cells_rndr, info_rndr):
     layout = Layout()
     layout.split_row(
@@ -46,7 +62,7 @@ def setup_window(cells_rndr, info_rndr):
     cell_panel = Panel(cells_rndr, title='Cell Voltages')
     layout['cells'].update(cell_panel)
 
-    info_panel = Panel(info_rndr, title='Basic Info')
+    info_panel = info_rndr
     layout['info'].update(info_panel)
 
     return layout
@@ -70,8 +86,13 @@ if __name__ == '__main__':
     cell_count = len(data)
     # print(data)
 
+    table_info, balance_info, fet_info = get_info()
+    print(fet_info)
+    print(balance_info)
+
     progress, tasks = setup_cells(cell_count)
-    layout = setup_window(progress, 'TEST')
+    info = setup_info(table_info)
+    layout = setup_window(progress, info)
 
     with Live(layout, refresh_per_second=5):
         while True:
