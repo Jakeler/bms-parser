@@ -55,7 +55,7 @@ def setup_info(info: list):
     return table
 
 
-def setup_window(cells_rndr, info_rndr):
+def setup_window(cells_rndr):
     layout = Layout()
     layout.split_row(
         Layout(name="cells"),
@@ -64,17 +64,20 @@ def setup_window(cells_rndr, info_rndr):
     cell_panel = Panel(cells_rndr, title='Cell Voltages')
     layout['cells'].update(cell_panel)
 
-    info_panel = info_rndr
-    # layout['info'].update(info_panel)
     layout['info'].split_column(
-        Layout(info_panel, ratio=8),
-        Layout(setup_timestamp())
+        Layout(name='panel', ratio=8),
+        Layout(name='time')
     )
 
     return layout
 
 def setup_timestamp():
     return Panel(f'Last updated: {datetime.datetime.now()}')
+
+
+def update_info(info: list):
+    layout['info']['panel'].update(setup_info(info))
+    layout['info']['time'].update(setup_timestamp())
 
 def update_cells(data: list, balancing: list):
     avg = sum(data)/len(data)
@@ -95,17 +98,17 @@ if __name__ == '__main__':
     cell_count = len(data)
     # print(data)
 
-    table_info, balance_info, fet_info = get_info()
-    info = setup_info(table_info)
-    fet_info = Panel(str(fet_info))
-    info_group = Group(info, fet_info)
+    # fet_info = Panel(str(fet_info))
+    # info_group = Group(info, fet_info)
 
     progress, tasks = setup_cells(cell_count)
-    layout = setup_window(progress, info_group)
+    layout = setup_window(progress)
 
-    with Live(layout, refresh_per_second=5):
+    with Live(layout, refresh_per_second=4):
         while True:
             # data = [3.6+random.random()/10 for _ in range(cell_count)]
+            table_info, balance_info, fet_info = get_info()
             data = get_cells()
+            update_info(table_info)
             update_cells(data, balance_info)
             time.sleep(0.5)
