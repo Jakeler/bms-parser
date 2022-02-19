@@ -1,8 +1,10 @@
-import time, random
+import time, datetime, random
 from rich import print
 from rich import box
 from rich.layout import Layout
 from rich.padding import Padding
+from rich.console import Group
+from rich.align import Align
 from rich.progress import Progress, BarColumn
 from rich.panel import Panel
 from rich.table import Table
@@ -63,11 +65,18 @@ def setup_window(cells_rndr, info_rndr):
     layout['cells'].update(cell_panel)
 
     info_panel = info_rndr
-    layout['info'].update(info_panel)
+    # layout['info'].update(info_panel)
+    layout['info'].split_column(
+        Layout(info_panel, ratio=8),
+        Layout(setup_timestamp())
+    )
 
     return layout
 
-def update_cells(data: list):
+def setup_timestamp():
+    return Panel(f'Last updated: {datetime.datetime.now()}')
+
+def update_cells(data: list, balancing: list):
     avg = sum(data)/len(data)
     low = min(data)
     high = max(data)
@@ -77,7 +86,7 @@ def update_cells(data: list):
             completed=val-MIN_VOLT, 
             description=f"{val:.2f} V", 
             delta=f'{Flags.gen(val == high, val == low)}{(val-avg)*1000: 04.0f} mV',
-            flags=Flags.balancing if random.random() > 0.5 else Flags.placeholder
+            flags=Flags.balancing if balancing[i] else Flags.placeholder
         )
 
 
@@ -87,16 +96,16 @@ if __name__ == '__main__':
     # print(data)
 
     table_info, balance_info, fet_info = get_info()
-    print(fet_info)
-    print(balance_info)
+    info = setup_info(table_info)
+    fet_info = Panel(str(fet_info))
+    info_group = Group(info, fet_info)
 
     progress, tasks = setup_cells(cell_count)
-    info = setup_info(table_info)
-    layout = setup_window(progress, info)
+    layout = setup_window(progress, info_group)
 
     with Live(layout, refresh_per_second=5):
         while True:
             # data = [3.6+random.random()/10 for _ in range(cell_count)]
             data = get_cells()
-            update_cells(data)
+            update_cells(data, balance_info)
             time.sleep(0.5)
