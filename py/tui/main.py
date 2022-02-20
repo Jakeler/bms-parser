@@ -2,8 +2,8 @@ import time, datetime, random, sys
 from rich import print
 from rich import box
 from rich.layout import Layout
-from rich.highlighter import ReprHighlighter
 from rich.bar import Bar
+from rich.columns import Columns
 from rich.spinner import Spinner
 from rich.panel import Panel
 from rich.table import Table
@@ -99,14 +99,11 @@ def setup_timestamp():
     return Panel(spin, title='Last updated')
 
 def setup_fets(fets: dict):
-    highl = ReprHighlighter()
-    content = highl(str(fets))
+    content = Columns([f'{k} = {v}' for k, v in fets.items()], expand=True)
     return Panel(content, title='FET status')
 
-def setup_prot(prot: dict):
-    highl = ReprHighlighter()
-    content = highl(str(prot))
-    # TODO use columns
+def setup_prot(prot: dict[str, bool]):
+    content = Columns([f'{k}={v}' for k, v in prot.items()], expand=True)
     return Panel(content, title='Protection')
 
 def update_info(info: list, fets: dict, prot: dict):
