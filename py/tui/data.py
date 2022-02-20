@@ -1,6 +1,7 @@
 from py.parser import BmsPacket
 import os, select, time
 from py.tui import mock_inputs
+from rich import print
 
 class Serial:
     def __init__(self, path: str, use_mock: bool = False, mock_fail_rate: float = 0.05):
@@ -63,5 +64,10 @@ class Serial:
             for t in i.temps
         ]
         balance = i.balance_status.is_balancing
-        fet = {'chg': i.fet_status.is_charge_enabled, 'dis': i.fet_status.is_discharge_enabled}
-        return (table, balance, fet)
+        fet = {
+            'charge enabled': i.fet_status.is_charge_enabled, 
+            'discharge enabled': i.fet_status.is_discharge_enabled,
+        }
+        prot_all = vars(i.prot_status)
+        prot = {k: v for k, v in prot_all.items() if not k.startswith('_')}
+        return (table, balance, fet, prot)

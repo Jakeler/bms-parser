@@ -1,10 +1,11 @@
 import time, datetime, random, sys
-# from rich import print
+from rich import print
 from rich import box
 from rich.layout import Layout
 from rich.padding import Padding
 from rich.console import Group
 from rich.align import Align
+from rich.highlighter import ReprHighlighter
 from rich.progress import Progress, BarColumn, RenderableColumn
 from rich.bar import Bar
 from rich.spinner import Spinner
@@ -73,19 +74,33 @@ def setup_window(cells_rndr):
     layout['cells'].update(cell_panel)
 
     layout['info'].split_column(
-        Layout(name='panel', ratio=8),
-        Layout(name='time')
+        Layout(name='panel', ratio=9),
+        Layout(name='fet'),
+        Layout(name='prot', ratio=3),
+        Layout(name='time'),
     )
 
     return layout
 
 def setup_timestamp():
-    spin = Spinner('dots', text=f'{datetime.datetime.now()}', speed=2)
+    spin = Spinner('dots', text=f'{datetime.datetime.now()}', speed=2, style='bright_magenta')
     return Panel(spin, title='Last updated')
 
+def setup_fets(fets: dict):
+    highl = ReprHighlighter()
+    content = highl(str(fets))
+    return Panel(content, title='FET status')
 
-def update_info(info: list):
+def setup_prot(prot: dict):
+    highl = ReprHighlighter()
+    content = highl(str(prot))
+    # TODO use columns
+    return Panel(content, title='Protection')
+
+def update_info(info: list, fets: dict, prot: dict):
     layout['info']['panel'].update(setup_info(info))
+    layout['info']['fet'].update(setup_fets(fets))
+    layout['info']['prot'].update(setup_prot(prot))
     layout['info']['time'].update(setup_timestamp())
 
 def update_cells(data: list, balancing: list):
@@ -124,15 +139,15 @@ if __name__ == '__main__':
     progress, tasks = setup_cells(cell_count)
     layout = setup_window(progress)
 
-    with Live(layout, refresh_per_second=30):
+    with Live(layout, refresh_per_second=10):
         while True:
             try:
-                table_info, balance_info, fet_info = serial.get_info()
+                table_info, balance_info, fet_info, prot_info = serial.get_info()
                 data = serial.get_cells()
             except Exception as e:
                 print(e)
                 continue
 
-            update_info(table_info)
+            update_info(table_info, fet_info, prot_info)
             update_cells(data, balance_info)
             time.sleep(0.5)
