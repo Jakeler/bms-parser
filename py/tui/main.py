@@ -18,6 +18,8 @@ MAX_VOLT = 4.2
 _RANGE_VOLT = MAX_VOLT - MIN_VOLT
 DELTA_LOW = 0.002
 
+MAX_CURRENT = 20
+
 class Window:
     def __init__(self):
         setup_placeholder = Panel('Waiting for data...')
@@ -31,7 +33,7 @@ class Window:
         self.layout['info'].split_column(
             Layout(setup_placeholder, name='info_table', ratio=9),
             Layout(setup_placeholder, name='fet'),
-            Layout(setup_placeholder, name='prot', ratio=3),
+            Layout(setup_placeholder, name='prot', ratio=2),
             Layout(setup_placeholder, name='time'),
         )
 
@@ -110,6 +112,10 @@ class Info:
             if '%' in line[2]:
                 vis = Bar(100, 0, int(line[1]), color='green', bgcolor='grey23')
                 table.add_row(line[0], vis, line[2])
+            elif 'A' == line[2]:
+                vis = Bar(MAX_CURRENT, 0, abs(float(line[1])), color='yellow', bgcolor='grey23')
+                table.add_row(line[0], vis, line[2])
+
 
         return table
 
@@ -121,7 +127,7 @@ class Info:
     @staticmethod
     def setup_prot(prot: dict[str, bool]):
         content = Columns([f'{k}={v}' for k, v in prot.items()], expand=True)
-        return Panel(content, title='Protection', box=box.SQUARE)
+        return Panel(content, title='Protection Alerts', box=box.SQUARE)
 
     @staticmethod
     def setup_timestamp():
