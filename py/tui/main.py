@@ -7,6 +7,7 @@ from rich.console import Group
 from rich.align import Align
 from rich.progress import Progress, BarColumn, RenderableColumn
 from rich.bar import Bar
+from rich.spinner import Spinner
 from rich.panel import Panel
 from rich.table import Table
 from rich.live import Live
@@ -79,7 +80,8 @@ def setup_window(cells_rndr):
     return layout
 
 def setup_timestamp():
-    return Panel(f'Last updated: {datetime.datetime.now()}')
+    spin = Spinner('dots', text=f'{datetime.datetime.now()}', speed=2)
+    return Panel(spin, title='Last updated')
 
 
 def update_info(info: list):
@@ -122,7 +124,7 @@ if __name__ == '__main__':
     progress, tasks = setup_cells(cell_count)
     layout = setup_window(progress)
 
-    with Live(layout, refresh_per_second=4):
+    with Live(layout, refresh_per_second=30):
         while True:
             try:
                 table_info, balance_info, fet_info = serial.get_info()
