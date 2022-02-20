@@ -61,7 +61,7 @@ def setup_cells(data: list[float], balancing: list[bool]):
     return table
 
 def setup_info(info: list[tuple[str, str, str]]):
-    table = Table(title='Basic Info', box=box.HORIZONTALS, show_lines=True)
+    table = Table(title='Basic Info', box=box.MINIMAL, show_lines=True)
 
     table.add_column('Title')
     table.add_column('Value')
@@ -96,15 +96,15 @@ def setup_window():
 
 def setup_timestamp():
     spin = Spinner('dots', text=f'{datetime.datetime.now()}', speed=2, style='bright_magenta')
-    return Panel(spin, title='Last updated')
+    return Panel(spin, title='Last updated', box=box.SQUARE)
 
 def setup_fets(fets: dict):
     content = Columns([f'{k} = {v}' for k, v in fets.items()], expand=True)
-    return Panel(content, title='FET status')
+    return Panel(content, title='FET status', box=box.SQUARE)
 
 def setup_prot(prot: dict[str, bool]):
     content = Columns([f'{k}={v}' for k, v in prot.items()], expand=True)
-    return Panel(content, title='Protection')
+    return Panel(content, title='Protection', box=box.SQUARE)
 
 def update_info(info: list, fets: dict, prot: dict):
     layout['info']['panel'].update(setup_info(info))
@@ -113,7 +113,7 @@ def update_info(info: list, fets: dict, prot: dict):
     layout['info']['time'].update(setup_timestamp())
 
 def update_cells(data: list[float], balancing: list[bool]):
-    cell_panel = Panel(setup_cells(data, balancing), title='Cell Voltages')
+    cell_panel = Panel(setup_cells(data, balancing), title='Cell Voltages', box=box.SQUARE)
     layout['cells'].update(cell_panel)
 
 
