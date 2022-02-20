@@ -19,7 +19,7 @@ class Serial:
         if self.fd in r:
             time.sleep(0.1)
             data = os.read(self.fd, 255)
-            print(data)
+            print(f"'{data.hex()}'")
             return data
         return None
 
