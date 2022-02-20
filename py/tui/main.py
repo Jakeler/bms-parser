@@ -2,11 +2,7 @@ import time, datetime, random, sys
 from rich import print
 from rich import box
 from rich.layout import Layout
-from rich.padding import Padding
-from rich.console import Group
-from rich.align import Align
 from rich.highlighter import ReprHighlighter
-from rich.progress import Progress, BarColumn, RenderableColumn
 from rich.bar import Bar
 from rich.spinner import Spinner
 from rich.panel import Panel
@@ -18,33 +14,51 @@ from py.tui.data import Serial
 MIN_VOLT = 3.5
 MAX_VOLT = 4.2
 _RANGE_VOLT = MAX_VOLT - MIN_VOLT
+DELTA_LOW = 0.001
 
 class Flags:
-    high = '[on dark_green] :arrow_heading_up: '
-    low = '[on dark_red] :arrow_heading_down: '
-    balancing = ' :yin_yang: '
-    placeholder = '   '
+    high = '[on dark_green]:arrow_heading_up: '
+    low = '[on dark_red]:arrow_heading_down: '
+    delta_low = '[bright_black]'
+    balancing = ' :yin_yang:'
+    placeholder = '  '
 
-    def gen(is_max: bool, is_min: bool):
+    def gen_delta(is_max: bool, is_min: bool, delta_small: bool):
         flags = Flags.placeholder
         flags = Flags.high if is_max else flags
         flags = Flags.low if is_min else flags
+        flags = Flags.delta_low + flags if delta_small else flags
         return flags
 
-def setup_cells(cell_count: int):
-    progress = Progress(
-        "[progress.description]{task.description}",
-        "[progress.percentage]{task.percentage:>3.0f}%",
-        BarColumn(),
-        # RenderableColumn(Bar(100, 0, 42, color='green', bgcolor='grey23')),
-        "{task.fields[delta]}",
-        "{task.fields[flags]}",
-    )
-    tasks = list(
-        progress.add_task('pending', total=_RANGE_VOLT, delta='none', flags=' - ')
-        for _ in range(cell_count)
-    )
-    return (progress, tasks)
+def setup_cells(data: list[float], balancing: list[bool]):
+    table = Table(show_lines=True, box=box.SIMPLE)
+
+    table.add_column('n', style='bright_black')
+    table.add_column('Volt')
+    table.add_column('%', style='magenta')
+    table.add_column('')
+    table.add_column('Delta')
+    table.add_column('Bal.')
+
+    avg = sum(data)/len(data)
+    low = min(data)
+    high = max(data)
+    for i, val in enumerate(data):
+        progress = val-MIN_VOLT
+        percent = progress/_RANGE_VOLT
+        delta = val-avg
+
+        row = dict(
+            index=f'{i+1}.',
+            voltage=f"{val:.2f} V",
+            percent=f'{percent*100:.0f}%',
+            progress=Bar(_RANGE_VOLT, 0, progress, color='cyan', bgcolor='grey23'),
+            delta=f'{Flags.gen_delta(val == high, val == low, abs(delta) < DELTA_LOW)}{delta*1000: 04.0f} mV',
+            flags=Flags.balancing if balancing[i] else Flags.placeholder
+        )
+        table.add_row(*row.values())
+
+    return table
 
 def setup_info(info: list[tuple[str, str, str]]):
     table = Table(title='Basic Info', box=box.HORIZONTALS, show_lines=True)
@@ -64,14 +78,12 @@ def setup_info(info: list[tuple[str, str, str]]):
     return table
 
 
-def setup_window(cells_rndr):
+def setup_window():
     layout = Layout()
     layout.split_row(
         Layout(name="cells"),
         Layout(name="info"),
     )
-    cell_panel = Panel(cells_rndr, title='Cell Voltages')
-    layout['cells'].update(cell_panel)
 
     layout['info'].split_column(
         Layout(name='panel', ratio=9),
@@ -103,18 +115,9 @@ def update_info(info: list, fets: dict, prot: dict):
     layout['info']['prot'].update(setup_prot(prot))
     layout['info']['time'].update(setup_timestamp())
 
-def update_cells(data: list, balancing: list):
-    avg = sum(data)/len(data)
-    low = min(data)
-    high = max(data)
-    for i in tasks:
-        val = data[i]
-        progress.update(i, 
-            completed=val-MIN_VOLT, 
-            description=f"{val:.2f} V", 
-            delta=f'{Flags.gen(val == high, val == low)}{(val-avg)*1000: 04.0f} mV',
-            flags=Flags.balancing if balancing[i] else Flags.placeholder
-        )
+def update_cells(data: list[float], balancing: list[bool]):
+    cell_panel = Panel(setup_cells(data, balancing), title='Cell Voltages')
+    layout['cells'].update(cell_panel)
 
 
 if __name__ == '__main__':
@@ -123,21 +126,7 @@ if __name__ == '__main__':
     else:
         serial = Serial(None, use_mock=True, mock_fail_rate=0.05)
 
-    # TODO Remove pre setup, only update with table approach
-    data = None
-    while not data:
-        try:
-            data = serial.get_cells()
-            cell_count = len(data)
-            # print(data)
-        except Exception as e:
-            print(e)
-
-    # fet_info = Panel(str(fet_info))
-    # info_group = Group(info, fet_info)
-
-    progress, tasks = setup_cells(cell_count)
-    layout = setup_window(progress)
+    layout = setup_window()
 
     with Live(layout, refresh_per_second=10):
         while True:
