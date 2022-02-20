@@ -1,6 +1,6 @@
 # BMS parser
 Definitions for the generic smart battery managment system protocol. 
-It is written with [Kaitai Struct], which can used to export parsers in different languages, some examples are in `py` for Python. `main.py` allows logging to a file or MongoDB instance, see the parameters.
+It is written with [Kaitai Struct](https://kaitai.io/), which can used to export parsers in different languages, some examples are in `py` for Python. `main.py` allows logging to a file or MongoDB instance, see the parameters.
 
 `py/tui` contains a terminal based UI:
 ![overview TUI animated](tui.gif)
@@ -10,6 +10,7 @@ It depends on `rich` and `kaitaistruct` (runtime) module, then it can be launche
 python -m py.tui.main /path/to/tty
 ```
 
+### Non Python Parsing
 For other languages you can use the compiler, for example:
 ```terminal
 $ cd kaitai
