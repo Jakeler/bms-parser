@@ -5,7 +5,8 @@ from rich.layout import Layout
 from rich.padding import Padding
 from rich.console import Group
 from rich.align import Align
-from rich.progress import Progress, BarColumn
+from rich.progress import Progress, BarColumn, RenderableColumn
+from rich.bar import Bar
 from rich.panel import Panel
 from rich.table import Table
 from rich.live import Live
@@ -33,6 +34,7 @@ def setup_cells(cell_count: int):
         "[progress.description]{task.description}",
         "[progress.percentage]{task.percentage:>3.0f}%",
         BarColumn(),
+        # RenderableColumn(Bar(100, 0, 42, color='green', bgcolor='grey23')),
         "{task.fields[delta]}",
         "{task.fields[flags]}",
     )
@@ -42,7 +44,7 @@ def setup_cells(cell_count: int):
     )
     return (progress, tasks)
 
-def setup_info(info: list):
+def setup_info(info: list[tuple[str, str, str]]):
     table = Table(title='Basic Info', box=box.HORIZONTALS, show_lines=True)
 
     table.add_column('Title')
@@ -51,6 +53,11 @@ def setup_info(info: list):
 
     for line in info:
         table.add_row(*line)
+
+        # add additional bar visualization
+        if '%' in line[2]:
+            vis = Bar(100, 0, int(line[1]), color='green', bgcolor='grey23')
+            table.add_row(line[0], vis, line[2])
 
     return table
 
@@ -94,8 +101,10 @@ def update_cells(data: list, balancing: list):
 
 
 if __name__ == '__main__':
-    serial = Serial('', use_mock=True, mock_fail_rate=0.2)
-    # serial = Serial(sys.argv[1])
+    if len(sys.argv) > 1:
+        serial = Serial(sys.argv[1])
+    else:
+        serial = Serial(None, use_mock=True, mock_fail_rate=0.05)
 
     # TODO Remove pre setup, only update with table approach
     data = None

@@ -36,25 +36,26 @@ class Serial:
         return self._request(b'\xdd\xa5\x05\x00\xff\xfbw')
 
 
-    def get_cells(self):
+    def get_cells(self) -> list[float]:
         raw = self.request_cells()
         pkt = BmsPacket.from_bytes(raw)
 
         cells = [c.volt for c in pkt.body.data.cells]
         return cells
 
-    def get_info(self):
+    def get_info(self) -> tuple[list[tuple[str, str, str]], list[bool], dict[str, bool]]:
         raw = self.request_info()
         pkt = BmsPacket.from_bytes(raw)
 
         i: BmsPacket.BasicInfo = pkt.body.data 
         table = [
             ('Pack Voltage', f'{i.pack_voltage.volt:.2f}', 'V'),
+            ('Cell', f'{i.cell_count}', 'count'),
             ('Pack Current', f'{i.pack_current.amp:.2f}', 'A'),
             ('Typ Cap', f'{i.typ_cap.amp_hour:.3f}', 'Ah'),
             ('Remain Cap', f'{i.remain_cap.amp_hour:.3f}', 'Ah'),
-            ('Remain Percent', f'{i.remain_cap_percent:.0f}', '%'),
-            ('Cycle', f'{i.cycles:.0f}', 'Count'),
+            ('Remain Percent', f'{i.remain_cap_percent}', '%'),
+            ('Cycle', f'{i.cycles:.0f}', 'count'),
             # ('Balance', f'{i.balance_status.is_balancing}', 'bit'),
             # ('FET', f'CHG={i.fet_status.is_charge_enabled} DIS={i.fet_status.is_discharge_enabled}', 'bit'),
         ] + [
