@@ -1,5 +1,5 @@
-import time, datetime, random
-from rich import print
+import time, datetime, random, sys
+# from rich import print
 from rich import box
 from rich.layout import Layout
 from rich.padding import Padding
@@ -10,7 +10,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.live import Live
 
-from py.tui.data import get_cells, get_info
+from py.tui.data import Serial
 
 MIN_VOLT = 3.5
 MAX_VOLT = 4.2
@@ -94,9 +94,17 @@ def update_cells(data: list, balancing: list):
 
 
 if __name__ == '__main__':
-    data = get_cells()
-    cell_count = len(data)
-    # print(data)
+    serial = Serial(sys.argv[1])
+
+    # TODO Remove pre setup, only update with table approach
+    data = None
+    while not data:
+        try:
+            data = serial.get_cells()
+            cell_count = len(data)
+            # print(data)
+        except Exception as e:
+            print(e)
 
     # fet_info = Panel(str(fet_info))
     # info_group = Group(info, fet_info)
@@ -107,8 +115,13 @@ if __name__ == '__main__':
     with Live(layout, refresh_per_second=4):
         while True:
             # data = [3.6+random.random()/10 for _ in range(cell_count)]
-            table_info, balance_info, fet_info = get_info()
-            data = get_cells()
+            try:
+                table_info, balance_info, fet_info = serial.get_info()
+                data = serial.get_cells()
+            except Exception as e:
+                print(e)
+                continue
+
             update_info(table_info)
             update_cells(data, balance_info)
             time.sleep(0.5)
