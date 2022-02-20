@@ -1,9 +1,13 @@
 from py.parser import BmsPacket
 import os, select, time
+from py.tui import mock_inputs
 
 class Serial:
-    def __init__(self, path: str):
-        self.fd = os.open(path, os.O_RDWR)
+    def __init__(self, path: str, use_mock: bool = False, mock_fail_rate: float = 0.05):
+        if not use_mock:
+            self.fd = os.open(path, os.O_RDWR)
+        self.use_mock = use_mock
+        self.mock_fail_rate = mock_fail_rate
 
     def _request(self, req: bytes):
         os.write(self.fd, req)
@@ -19,9 +23,13 @@ class Serial:
         return None
 
     def request_info(self) -> bytes:
+        if self.use_mock:
+            return mock_inputs.get_response('info', self.mock_fail_rate)
         return self._request(b'\xdd\xa5\x03\x00\xff\xfdw')
 
     def request_cells(self) -> bytes:
+        if self.use_mock:
+            return mock_inputs.get_response('cell', self.mock_fail_rate)
         return self._request(b'\xdd\xa5\x04\x00\xff\xfcw')
 
     def request_hw(self) -> bytes:
@@ -31,17 +39,14 @@ class Serial:
     def get_cells(self):
         raw = self.request_cells()
         pkt = BmsPacket.from_bytes(raw)
-        # incoming = 'dd0400160fa70fa50fa10f980f9e0fa00fb10fbb0fb10fa60fa7f81877'
-        # pkt = BmsPacket.from_bytes(bytes.fromhex(incoming))
+
         cells = [c.volt for c in pkt.body.data.cells]
         return cells
 
     def get_info(self):
         raw = self.request_info()
         pkt = BmsPacket.from_bytes(raw)
-        # incoming = 'dd03001b1138006200a404b00000276e028200000000210e030b020b220b10fc4277'
-        # pkt = BmsPacket.from_bytes(bytes.fromhex(incoming))
-        # print(pktToString(pkt), '\n')
+
         i: BmsPacket.BasicInfo = pkt.body.data 
         table = [
             ('Pack Voltage', f'{i.pack_voltage.volt:.2f}', 'V'),

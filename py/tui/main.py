@@ -94,7 +94,8 @@ def update_cells(data: list, balancing: list):
 
 
 if __name__ == '__main__':
-    serial = Serial(sys.argv[1])
+    serial = Serial('', use_mock=True, mock_fail_rate=0.2)
+    # serial = Serial(sys.argv[1])
 
     # TODO Remove pre setup, only update with table approach
     data = None
@@ -114,7 +115,6 @@ if __name__ == '__main__':
 
     with Live(layout, refresh_per_second=4):
         while True:
-            # data = [3.6+random.random()/10 for _ in range(cell_count)]
             try:
                 table_info, balance_info, fet_info = serial.get_info()
                 data = serial.get_cells()
