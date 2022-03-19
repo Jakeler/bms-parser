@@ -89,7 +89,7 @@ fails: list[bytes] = [
     b'\x00'
 ]
 
-def get_response(category: str, failure_rate: float, seq: bool = True):
+def get_response(category: str, failure_rate: float, seq: bool = False):
     if random.random() <= failure_rate:
         print('Injecting failed response')
         return random.choice(fails)

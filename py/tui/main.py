@@ -148,9 +148,11 @@ def run():
             try:
                 table_info, balance_info, fet_info, prot_info = serial.get_info()
                 cell_data = serial.get_cells()
+            except OSError as ose:
+                print(ose)
+                sys.exit(1)
             except Exception as e:
                 print(e)
-                time.sleep(REFRESH_INTERVAL)
                 continue
 
             window.update_info(table_info, fet_info, prot_info)
