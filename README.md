@@ -10,6 +10,8 @@ It depends on `rich` and `kaitaistruct` (runtime) module, then it can be launche
 python -m py.tui.main /path/to/tty
 ```
 
+This fork is the same as the original repository except for TUI is now runs on `pyserial` commands for cross-platform support. 
+
 ### Non Python Parsing
 For other languages you can use the compiler, for example:
 ```terminal
