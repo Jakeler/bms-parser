@@ -2,24 +2,27 @@ from py.parser import BmsPacket
 import os, select, time
 from py.tui import mock_inputs
 from rich import print
+import serial
+
+EMPTY = b''
 
 class Serial:
     def __init__(self, path: str, use_mock: bool = False, mock_fail_rate: float = 0.05):
         if not use_mock:
-            self.fd = os.open(path, os.O_RDWR)
+            self.fd = serial.Serial(path)
+            self.fd.timeout = 0
         self.use_mock = use_mock
         self.mock_fail_rate = mock_fail_rate
 
     def _request(self, req: bytes):
-        os.write(self.fd, req)
+        self.fd.write(req)
 
-        print(f'> Request: {req.hex()}')
+        # print(f'> Request: {req.hex()}') # for debugging perpuses only
+        time.sleep(0.1)
+        data = self.fd.read_all()
 
-        r, w, e = select.select([self.fd], [], [], 1.0)
-        if self.fd in r:
-            time.sleep(0.1)
-            data = os.read(self.fd, 255)
-            print(f"'{data.hex()}'")
+        if data is not EMPTY:
+            # print(f"'{data.hex()}'"") # IDK why this creates flickering in Windows Terminal
             return data
         return None
 
