@@ -1,30 +1,26 @@
 from py.parser import BmsPacket
-import os, select, time
+import os, select, datetime
 from py.tui import mock_inputs
 from rich import print
 import serial
 
-EMPTY = b''
+END_BYTE = b'\x77'
 
 class Serial:
     def __init__(self, path: str, use_mock: bool = False, mock_fail_rate: float = 0.05):
         if not use_mock:
-            self.pyserial = serial.Serial(path)
-            self.pyserial.timeout = 0
+            self.pyserial = serial.Serial(path, timeout=1.0)
         self.use_mock = use_mock
         self.mock_fail_rate = mock_fail_rate
 
     def _request(self, req: bytes):
         self.pyserial.write(req)
+        #print(f'> Request: {req.hex()}') # for debugging perpuses only
 
-        # print(f'> Request: {req.hex()}') # for debugging perpuses only
-        time.sleep(0.1)
-        data = self.pyserial.read_all()
-
-        if data is not EMPTY:
-            # print(f"'{data.hex()}'")
-            return data
-        return None
+        data = self.pyserial.read_until(expected=END_BYTE) # waits for a full packet with global timeout (1.0 sec)
+        data += self.pyserial.read_all() # empty the buffer
+        #print(f"'{data.hex()}'")
+        return data
 
     def request_info(self) -> bytes:
         if self.use_mock:
