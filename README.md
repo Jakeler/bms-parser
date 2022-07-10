@@ -5,12 +5,10 @@ It is written with [Kaitai Struct](https://kaitai.io/), which can used to export
 `py/tui` contains a terminal based UI:
 ![overview TUI animated](tui.gif)
 
-It depends on `rich` and `kaitaistruct` (runtime) module, then it can be launched (from the root dir) with:
+It depends on `rich`, `pyserial` and `kaitaistruct` (runtime) module, then it can be launched (from the root dir) with:
 ```
 python -m py.tui.main /path/to/tty
 ```
-
-This fork is the same as the original repository except for TUI is now runs on `pyserial` commands for cross-platform support. 
 
 ### Non Python Parsing
 For other languages you can use the compiler, for example:
