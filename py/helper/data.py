@@ -1,4 +1,3 @@
-from rich import print
 import serial
 from py.protocol.parser import BmsPacket
 from py.protocol import mock_inputs
@@ -6,19 +5,23 @@ from py.protocol import mock_inputs
 END_BYTE = b'\x77'
 
 class Serial:
-    def __init__(self, path: str, use_mock: bool = False, mock_fail_rate: float = 0.05):
+    def __init__(self, path: str, verbose: bool = False,
+                 use_mock: bool = False, mock_fail_rate: float = 0.05):
         if not use_mock:
             self.pyserial = serial.Serial(path, timeout=1.0)
+        self.verbose = verbose
         self.use_mock = use_mock
         self.mock_fail_rate = mock_fail_rate
 
     def _request(self, req: bytes):
         self.pyserial.write(req)
-        #print(f'> Request: {req.hex()}') # for debugging perpuses only
+        if self.verbose:
+            print(f'> Request: {req.hex()}')
 
         data = self.pyserial.read_until(expected=END_BYTE) # waits for a full packet with global timeout (1.0 sec)
         data += self.pyserial.read_all() # empty the buffer
-        #print(f"'{data.hex()}'")
+        if self.verbose:
+            print(f'< Response: {data.hex()}')
         return data
 
     def request_info(self) -> bytes:

@@ -28,7 +28,7 @@ def parse_packet(data: bytes, insert_db = False) -> str:
 if __name__ == "__main__":
     args = parse_args()
 
-    serial = Serial(args.dev)
+    serial = Serial(args.dev, verbose=args.verbose)
 
     if args.mongo:
         from py.cli.db import DB
