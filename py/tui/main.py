@@ -9,7 +9,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.live import Live
 
-from py.tui.data import Serial
+from py.helper.data import Serial
 
 REFRESH_INTERVAL = 0.5
 

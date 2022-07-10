@@ -1,8 +1,7 @@
-from py.parser import BmsPacket
-import os, select, datetime
-from py.tui import mock_inputs
 from rich import print
 import serial
+from py.protocol.parser import BmsPacket
+from py.protocol import mock_inputs
 
 END_BYTE = b'\x77'
 

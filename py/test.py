@@ -1,8 +1,8 @@
-from parser import BmsPacket
+import unittest
 import kaitaistruct
 from pprint import pp
-from converter import serialize, pktToString
-import unittest
+from py.protocol.parser import BmsPacket
+from py.helper.converter import serialize, pktToString
 
 class TestBasicInfo(unittest.TestCase):
 

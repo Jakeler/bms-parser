@@ -1,4 +1,4 @@
-from py.battery_management_system_protocol import BatteryManagementSystemProtocol as bms
+from py.protocol.battery_management_system_protocol import BatteryManagementSystemProtocol as bms
 
 class BmsPacket(bms):
 
