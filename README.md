@@ -5,7 +5,7 @@ It is written with [Kaitai Struct](https://kaitai.io/), which can used to export
 `py/tui` contains a terminal based UI:
 ![overview TUI animated](tui.gif)
 
-It depends on `rich` and `kaitaistruct` (runtime) module, then it can be launched (from the root dir) with:
+It depends on `rich`, `pyserial` and `kaitaistruct` (runtime) module, then it can be launched (from the root dir) with:
 ```
 python -m py.tui.main /path/to/tty
 ```
