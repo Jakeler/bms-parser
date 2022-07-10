@@ -1,11 +1,10 @@
+from pymongo import MongoClient
+from pymongo.results import InsertOneResult
+from bson.objectid import ObjectId
 from py.protocol.parser import BmsPacket as bms
 
 class DB:
     def __init__(self):
-        from pymongo import MongoClient
-        from pymongo.results import InsertOneResult
-        from bson.objectid import ObjectId
-
         self.client = MongoClient('localhost', 27017)
         self.db = self.client['bms']
     
