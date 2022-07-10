@@ -9,20 +9,20 @@ EMPTY = b''
 class Serial:
     def __init__(self, path: str, use_mock: bool = False, mock_fail_rate: float = 0.05):
         if not use_mock:
-            self.fd = serial.Serial(path)
-            self.fd.timeout = 0
+            self.pyserial = serial.Serial(path)
+            self.pyserial.timeout = 0
         self.use_mock = use_mock
         self.mock_fail_rate = mock_fail_rate
 
     def _request(self, req: bytes):
-        self.fd.write(req)
+        self.pyserial.write(req)
 
         # print(f'> Request: {req.hex()}') # for debugging perpuses only
         time.sleep(0.1)
-        data = self.fd.read_all()
+        data = self.pyserial.read_all()
 
         if data is not EMPTY:
-            # print(f"'{data.hex()}'"") # IDK why this creates flickering in Windows Terminal
+            # print(f"'{data.hex()}'")
             return data
         return None
 
