@@ -9,6 +9,8 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.live import Live
 
+from kaitaistruct import ValidationGreaterThanError, ValidationLessThanError, ValidationNotEqualError
+
 from py.helper.data import Serial
 
 REFRESH_INTERVAL = 0.5
@@ -148,6 +150,12 @@ def run():
             try:
                 table_info, balance_info, fet_info, prot_info = serial.get_info()
                 cell_data = serial.get_cells()
+            except ValidationNotEqualError:
+                continue
+            except ValidationGreaterThanError:
+                continue
+            except ValidationLessThanError:
+                continue
             except OSError as ose:
                 print(ose)
                 sys.exit(1)
